@@ -4,20 +4,17 @@
       .band-title   { font-size: 21px; font-weight: 600; letter-spacing: .3px; }
       .band-sub     { font-size: 15px; font-weight: 500; letter-spacing: .3px; }
       .body         { font-size: 14.5px; }
-      .aode         { font-size: 13.5px; font-family: 'IBM Plex Sans','Segoe UI',Arial,sans-serif; }
+      .aode         { font-size: 13.5px; }
       .flow         { font-size: 13px; font-weight: 600; }
       .flow-sub     { font-size: 12px; }
       .chip         { font-size: 13px; font-weight: 600; }
       .footer-t     { font-size: 17px; font-weight: 600; letter-spacing: .3px; }
       .footer-b     { font-size: 14.5px; font-weight: 500; }
+      .shaft-down   { stroke: #0f62fe; stroke-width: 4; }
+      .head-down    { fill: #0f62fe; }
+      .shaft-up     { stroke: #002d9c; stroke-width: 4; }
+      .head-up      { fill: #002d9c; }
     </style>
-    <!-- solid filled arrowheads for high visibility (fixed size, not scaled by stroke width) -->
-    <marker id="intentHead" markerUnits="userSpaceOnUse" markerWidth="20" markerHeight="18" refX="8" refY="15" orient="auto">
-      <path d="M0,0 L16,0 L8,15 Z" fill="#0f62fe"/>
-    </marker>
-    <marker id="reportHead" markerUnits="userSpaceOnUse" markerWidth="20" markerHeight="18" refX="8" refY="1" orient="auto">
-      <path d="M0,15 L16,15 L8,0 Z" fill="#002d9c"/>
-    </marker>
   </defs>
 
   <!-- Carbon Gray 10 background -->
@@ -32,13 +29,15 @@
   <text x="760" y="122" text-anchor="middle" class="band-title" fill="#ffffff">CUSTOMER · ENTERPRISE · OPS-STRATEGY</text>
   <text x="760" y="145" text-anchor="middle" class="band-sub" fill="#a6c8ff">Human Intent Owners</text>
 
-  <!-- flow human <-> BSS -->
-  <line x1="600" y1="160" x2="600" y2="210" stroke="#0f62fe" stroke-width="4" marker-end="url(#intentHead)"/>
+  <!-- flow human <-> BSS  (gap 158..214) -->
+  <line x1="600" y1="164" x2="600" y2="196" class="shaft-down"/>
+  <polygon points="592,196 608,196 600,208" class="head-down"/>
   <text x="586" y="182" text-anchor="end" class="flow" fill="#0043ce">business intent</text>
   <text x="586" y="198" text-anchor="end" class="flow-sub" fill="#0043ce">outcome + SLA + budget + schedule</text>
-  <line x1="920" y1="212" x2="920" y2="162" stroke="#002d9c" stroke-width="4" marker-end="url(#reportHead)"/>
-  <text x="934" y="182" class="flow" fill="#002d9c">fulfilment reports</text>
-  <text x="934" y="198" class="flow-sub" fill="#002d9c">SLA credits · renegotiation</text>
+  <line x1="920" y1="208" x2="920" y2="176" class="shaft-up"/>
+  <polygon points="912,176 928,176 920,164" class="head-up"/>
+  <text x="936" y="182" class="flow" fill="#002d9c">fulfilment reports</text>
+  <text x="936" y="198" class="flow-sub" fill="#002d9c">SLA credits · renegotiation</text>
 
   <!-- ===================== BSS BAND · Blue 80 ===================== -->
   <rect x="90" y="214" width="1340" height="150" fill="#ffffff" stroke="#002d9c" stroke-width="2"/>
@@ -50,12 +49,14 @@
   <text x="126" y="320" class="aode" fill="#002d9c"><tspan font-weight="700">Aw</tspan> order / experience / revenue signals   ·   <tspan font-weight="700">An</tspan> feasibility + pricing</text>
   <text x="126" y="340" class="aode" fill="#002d9c"><tspan font-weight="700">De</tspan> accept / counter-offer   ·   <tspan font-weight="700">Ex</tspan> order + charging activation</text>
 
-  <!-- flow BSS <-> OSS -->
-  <line x1="600" y1="366" x2="600" y2="416" stroke="#0f62fe" stroke-width="4" marker-end="url(#intentHead)"/>
+  <!-- flow BSS <-> OSS  (gap 364..420) -->
+  <line x1="600" y1="370" x2="600" y2="402" class="shaft-down"/>
+  <polygon points="592,402 608,402 600,414" class="head-down"/>
   <text x="586" y="388" text-anchor="end" class="flow" fill="#0043ce">service intent</text>
   <text x="586" y="404" text-anchor="end" class="flow-sub" fill="#0043ce">TMF921 + TMF641</text>
-  <line x1="920" y1="418" x2="920" y2="368" stroke="#002d9c" stroke-width="4" marker-end="url(#reportHead)"/>
-  <text x="934" y="394" class="flow" fill="#002d9c">intent reports</text>
+  <line x1="920" y1="414" x2="920" y2="382" class="shaft-up"/>
+  <polygon points="912,382 928,382 920,370" class="head-up"/>
+  <text x="936" y="394" class="flow" fill="#002d9c">intent reports</text>
 
   <!-- ===================== OSS BAND · Blue 70 ===================== -->
   <rect x="90" y="420" width="1340" height="150" fill="#ffffff" stroke="#0043ce" stroke-width="2"/>
@@ -67,13 +68,17 @@
   <text x="126" y="526" class="aode" fill="#0043ce"><tspan font-weight="700">Aw</tspan> service KPIs / KQIs vs expectations   ·   <tspan font-weight="700">An</tspan> E2E RCA, impact</text>
   <text x="126" y="546" class="aode" fill="#0043ce"><tspan font-weight="700">De</tspan> re-plan / re-negotiate / escalate   ·   <tspan font-weight="700">Ex</tspan> (re)orchestration</text>
 
-  <!-- flow OSS <-> NETWORK -->
-  <line x1="430" y1="572" x2="430" y2="622" stroke="#0f62fe" stroke-width="4" marker-end="url(#intentHead)"/>
-  <line x1="600" y1="572" x2="600" y2="622" stroke="#0f62fe" stroke-width="4" marker-end="url(#intentHead)"/>
-  <line x1="770" y1="572" x2="770" y2="622" stroke="#0f62fe" stroke-width="4" marker-end="url(#intentHead)"/>
-  <text x="600" y="597" text-anchor="middle" class="flow" fill="#0043ce">resource intents</text>
-  <line x1="990" y1="624" x2="990" y2="574" stroke="#002d9c" stroke-width="4" marker-end="url(#reportHead)"/>
-  <text x="1004" y="597" class="flow" fill="#002d9c">domain reports</text>
+  <!-- flow OSS <-> NETWORK  (gap 570..626) : three resource-intent arrows + one report arrow -->
+  <line x1="360" y1="576" x2="360" y2="608" class="shaft-down"/>
+  <polygon points="352,608 368,608 360,620" class="head-down"/>
+  <line x1="470" y1="576" x2="470" y2="608" class="shaft-down"/>
+  <polygon points="462,608 478,608 470,620" class="head-down"/>
+  <line x1="580" y1="576" x2="580" y2="608" class="shaft-down"/>
+  <polygon points="572,608 588,608 580,620" class="head-down"/>
+  <text x="600" y="587" text-anchor="start" class="flow" fill="#0043ce">resource intents</text>
+  <line x1="990" y1="620" x2="990" y2="588" class="shaft-up"/>
+  <polygon points="982,588 998,588 990,576" class="head-up"/>
+  <text x="1006" y="600" class="flow" fill="#002d9c">domain reports</text>
 
   <!-- ===================== NETWORK BAND · Blue 60 ===================== -->
   <rect x="90" y="626" width="1340" height="196" fill="#ffffff" stroke="#0f62fe" stroke-width="2"/>
@@ -106,12 +111,14 @@
     <rect x="1130" y="908" width="300" height="36" rx="18" fill="#002d9c" stroke="#0f62fe"/>
     <text x="1280" y="931" text-anchor="middle" fill="#d0e2ff">L4 · NOC / intent supervisor</text>
   </g>
-  <g>
-    <line x1="420" y1="926" x2="464" y2="926" stroke="#78a9ff" stroke-width="3"/>
-    <path d="M460,921 L472,926 L460,931 Z" fill="#78a9ff"/>
-    <line x1="740" y1="926" x2="784" y2="926" stroke="#78a9ff" stroke-width="3"/>
-    <path d="M780,921 L792,926 L780,931 Z" fill="#78a9ff"/>
-    <line x1="1080" y1="926" x2="1124" y2="926" stroke="#78a9ff" stroke-width="3"/>
-    <path d="M1120,921 L1132,926 L1120,931 Z" fill="#78a9ff"/>
+  <g stroke="#78a9ff" stroke-width="3">
+    <line x1="420" y1="926" x2="462" y2="926"/>
+    <line x1="740" y1="926" x2="782" y2="926"/>
+    <line x1="1080" y1="926" x2="1122" y2="926"/>
+  </g>
+  <g fill="#78a9ff">
+    <polygon points="462,921 472,926 462,931"/>
+    <polygon points="782,921 792,926 782,931"/>
+    <polygon points="1122,921 1132,926 1122,931"/>
   </g>
 </svg>
