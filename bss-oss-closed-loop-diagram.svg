@@ -19,93 +19,93 @@
     </marker>
   </defs>
 
-  <!-- Carbon background: Gray 10 -->
+  <!-- Carbon Gray 10 background -->
   <rect x="0" y="0" width="1520" height="1000" fill="#f4f4f4"/>
 
   <!-- ===================== TITLE ===================== -->
-  <text x="760" y="42" text-anchor="middle" font-size="26" font-weight="600" fill="#161616">BSS / OSS / Network — Nested Closed-Loop Autonomy</text>
-  <text x="760" y="68" text-anchor="middle" font-size="14.5" fill="#525252">Intent flows down · reports flow up · every layer runs an Awareness → Analysis → Decision → Execution loop</text>
+  <text x="760" y="42" text-anchor="middle" font-size="26" font-weight="600" fill="#001d6c">BSS / OSS / Network — Nested Closed-Loop Autonomy</text>
+  <text x="760" y="68" text-anchor="middle" font-size="14.5" fill="#0043ce">Intent flows down · reports flow up · every layer runs an Awareness → Analysis → Decision → Execution loop</text>
 
-  <!-- ===================== HUMAN LAYER · Purple 70 ===================== -->
-  <rect x="360" y="92" width="800" height="66" fill="#6929c4"/>
+  <!-- ===================== HUMAN LAYER · Blue 90 ===================== -->
+  <rect x="360" y="92" width="800" height="66" fill="#001d6c"/>
   <text x="760" y="122" text-anchor="middle" class="band-title" fill="#ffffff">CUSTOMER · ENTERPRISE · OPS-STRATEGY</text>
-  <text x="760" y="145" text-anchor="middle" class="band-sub" fill="#e8daff">Human Intent Owners</text>
+  <text x="760" y="145" text-anchor="middle" class="band-sub" fill="#a6c8ff">Human Intent Owners</text>
 
   <!-- flow human <-> BSS -->
   <line x1="600" y1="160" x2="600" y2="212" stroke="#0f62fe" stroke-width="2.6" marker-end="url(#arrowDown)"/>
   <text x="588" y="182" text-anchor="end" class="flow" fill="#0043ce">business intent</text>
   <text x="588" y="198" text-anchor="end" class="flow-sub" fill="#0043ce">outcome + SLA + budget + schedule</text>
-  <line x1="920" y1="212" x2="920" y2="160" stroke="#24a148" stroke-width="2.6" marker-end="url(#arrowUp)"/>
-  <text x="932" y="182" class="flow" fill="#198038">fulfilment reports</text>
-  <text x="932" y="198" class="flow-sub" fill="#198038">SLA credits · renegotiation</text>
+  <line x1="920" y1="212" x2="920" y2="160" stroke="#78a9ff" stroke-width="2.6" marker-end="url(#arrowUp)"/>
+  <text x="932" y="182" class="flow" fill="#0043ce">fulfilment reports</text>
+  <text x="932" y="198" class="flow-sub" fill="#0043ce">SLA credits · renegotiation</text>
 
-  <!-- ===================== BSS BAND · Blue 60 ===================== -->
-  <rect x="90" y="214" width="1340" height="150" fill="#ffffff" stroke="#0f62fe" stroke-width="2"/>
-  <rect x="90" y="214" width="1340" height="38" fill="#0f62fe"/>
+  <!-- ===================== BSS BAND · Blue 80 ===================== -->
+  <rect x="90" y="214" width="1340" height="150" fill="#ffffff" stroke="#002d9c" stroke-width="2"/>
+  <rect x="90" y="214" width="1340" height="38" fill="#002d9c"/>
   <text x="112" y="240" class="band-title" fill="#ffffff">BSS</text>
-  <text x="176" y="240" class="band-sub" fill="#d0e2ff">BUSINESS CLOSED LOOP</text>
+  <text x="176" y="240" class="band-sub" fill="#a6c8ff">BUSINESS CLOSED LOOP</text>
   <text x="112" y="282" class="body" fill="#161616">Capture intent from catalog → negotiate feasibility / price → order → monitor business KEIs → charge on measured outcome</text>
   <rect x="112" y="298" width="1296" height="52" fill="#edf5ff"/>
-  <text x="126" y="320" class="aode" fill="#0043ce"><tspan font-weight="700">Aw</tspan> order / experience / revenue signals   ·   <tspan font-weight="700">An</tspan> feasibility + pricing</text>
-  <text x="126" y="340" class="aode" fill="#0043ce"><tspan font-weight="700">De</tspan> accept / counter-offer   ·   <tspan font-weight="700">Ex</tspan> order + charging activation</text>
+  <text x="126" y="320" class="aode" fill="#002d9c"><tspan font-weight="700">Aw</tspan> order / experience / revenue signals   ·   <tspan font-weight="700">An</tspan> feasibility + pricing</text>
+  <text x="126" y="340" class="aode" fill="#002d9c"><tspan font-weight="700">De</tspan> accept / counter-offer   ·   <tspan font-weight="700">Ex</tspan> order + charging activation</text>
 
   <!-- flow BSS <-> OSS -->
   <line x1="600" y1="366" x2="600" y2="418" stroke="#0f62fe" stroke-width="2.6" marker-end="url(#arrowDown)"/>
   <text x="588" y="388" text-anchor="end" class="flow" fill="#0043ce">service intent</text>
   <text x="588" y="404" text-anchor="end" class="flow-sub" fill="#0043ce">TMF921 + TMF641</text>
-  <line x1="920" y1="418" x2="920" y2="366" stroke="#24a148" stroke-width="2.6" marker-end="url(#arrowUp)"/>
-  <text x="932" y="394" class="flow" fill="#198038">intent reports</text>
+  <line x1="920" y1="418" x2="920" y2="366" stroke="#78a9ff" stroke-width="2.6" marker-end="url(#arrowUp)"/>
+  <text x="932" y="394" class="flow" fill="#0043ce">intent reports</text>
 
-  <!-- ===================== OSS BAND · Teal 60 ===================== -->
-  <rect x="90" y="420" width="1340" height="150" fill="#ffffff" stroke="#007d79" stroke-width="2"/>
-  <rect x="90" y="420" width="1340" height="38" fill="#007d79"/>
+  <!-- ===================== OSS BAND · Blue 70 ===================== -->
+  <rect x="90" y="420" width="1340" height="150" fill="#ffffff" stroke="#0043ce" stroke-width="2"/>
+  <rect x="90" y="420" width="1340" height="38" fill="#0043ce"/>
   <text x="112" y="446" class="band-title" fill="#ffffff">OSS</text>
-  <text x="176" y="446" class="band-sub" fill="#9ef0f0">SERVICE CLOSED LOOP</text>
+  <text x="176" y="446" class="band-sub" fill="#d0e2ff">SERVICE CLOSED LOOP</text>
   <text x="112" y="488" class="body" fill="#161616">Qualify → decompose (catalog-driven) → distribute resource intents → intent-aware assurance → arbitrate cross-domain</text>
-  <rect x="112" y="504" width="1296" height="52" fill="#d9fbfb"/>
-  <text x="126" y="526" class="aode" fill="#005d5d"><tspan font-weight="700">Aw</tspan> service KPIs / KQIs vs expectations   ·   <tspan font-weight="700">An</tspan> E2E RCA, impact</text>
-  <text x="126" y="546" class="aode" fill="#005d5d"><tspan font-weight="700">De</tspan> re-plan / re-negotiate / escalate   ·   <tspan font-weight="700">Ex</tspan> (re)orchestration</text>
+  <rect x="112" y="504" width="1296" height="52" fill="#edf5ff"/>
+  <text x="126" y="526" class="aode" fill="#0043ce"><tspan font-weight="700">Aw</tspan> service KPIs / KQIs vs expectations   ·   <tspan font-weight="700">An</tspan> E2E RCA, impact</text>
+  <text x="126" y="546" class="aode" fill="#0043ce"><tspan font-weight="700">De</tspan> re-plan / re-negotiate / escalate   ·   <tspan font-weight="700">Ex</tspan> (re)orchestration</text>
 
   <!-- flow OSS <-> NETWORK -->
   <line x1="430" y1="572" x2="430" y2="624" stroke="#0f62fe" stroke-width="2.4" marker-end="url(#arrowDown)"/>
   <line x1="600" y1="572" x2="600" y2="624" stroke="#0f62fe" stroke-width="2.4" marker-end="url(#arrowDown)"/>
   <line x1="770" y1="572" x2="770" y2="624" stroke="#0f62fe" stroke-width="2.4" marker-end="url(#arrowDown)"/>
   <text x="600" y="600" text-anchor="middle" class="flow" fill="#0043ce">resource intents</text>
-  <line x1="990" y1="624" x2="990" y2="572" stroke="#24a148" stroke-width="2.6" marker-end="url(#arrowUp)"/>
-  <text x="1002" y="600" class="flow" fill="#198038">domain reports</text>
+  <line x1="990" y1="624" x2="990" y2="572" stroke="#78a9ff" stroke-width="2.6" marker-end="url(#arrowUp)"/>
+  <text x="1002" y="600" class="flow" fill="#0043ce">domain reports</text>
 
-  <!-- ===================== NETWORK BAND · Orange 60 ===================== -->
-  <rect x="90" y="626" width="1340" height="196" fill="#ffffff" stroke="#ba4e00" stroke-width="2"/>
-  <rect x="90" y="626" width="1340" height="38" fill="#ba4e00"/>
+  <!-- ===================== NETWORK BAND · Blue 60 ===================== -->
+  <rect x="90" y="626" width="1340" height="196" fill="#ffffff" stroke="#0f62fe" stroke-width="2"/>
+  <rect x="90" y="626" width="1340" height="38" fill="#0f62fe"/>
   <text x="112" y="652" class="band-title" fill="#ffffff">NETWORK</text>
-  <text x="250" y="652" class="band-sub" fill="#ffd9be">Autonomous Domains · RESOURCE CLOSED LOOP per domain</text>
+  <text x="250" y="652" class="band-sub" fill="#d0e2ff">Autonomous Domains · RESOURCE CLOSED LOOP per domain</text>
 
-  <rect x="112" y="676" width="410" height="40" fill="#fff2e8" stroke="#ff832b" stroke-width="1.6"/>
-  <text x="317" y="701" text-anchor="middle" class="chip" fill="#8a3800">RAN — AD loop</text>
-  <rect x="555" y="676" width="410" height="40" fill="#fff2e8" stroke="#ff832b" stroke-width="1.6"/>
-  <text x="760" y="701" text-anchor="middle" class="chip" fill="#8a3800">Core — AD loop</text>
-  <rect x="998" y="676" width="410" height="40" fill="#fff2e8" stroke="#ff832b" stroke-width="1.6"/>
-  <text x="1203" y="701" text-anchor="middle" class="chip" fill="#8a3800">Transport / Cloud — AD loops</text>
+  <rect x="112" y="676" width="410" height="40" fill="#edf5ff" stroke="#4589ff" stroke-width="1.6"/>
+  <text x="317" y="701" text-anchor="middle" class="chip" fill="#002d9c">RAN — AD loop</text>
+  <rect x="555" y="676" width="410" height="40" fill="#edf5ff" stroke="#4589ff" stroke-width="1.6"/>
+  <text x="760" y="701" text-anchor="middle" class="chip" fill="#002d9c">Core — AD loop</text>
+  <rect x="998" y="676" width="410" height="40" fill="#edf5ff" stroke="#4589ff" stroke-width="1.6"/>
+  <text x="1203" y="701" text-anchor="middle" class="chip" fill="#002d9c">Transport / Cloud — AD loops</text>
 
-  <rect x="112" y="728" width="1296" height="76" fill="#fff2e8"/>
-  <text x="126" y="752" class="aode" fill="#8a3800"><tspan font-weight="700">Aw</tspan> telemetry + digital twin   ·   <tspan font-weight="700">An</tspan> RCA / forecast / verdict</text>
-  <text x="126" y="772" class="aode" fill="#8a3800"><tspan font-weight="700">De</tspan> confidence-gated, blast-radius-tiered</text>
-  <text x="126" y="792" class="aode" fill="#8a3800"><tspan font-weight="700">Ex</tspan> transactional actions · verify · auto-rollback</text>
+  <rect x="112" y="728" width="1296" height="76" fill="#edf5ff"/>
+  <text x="126" y="752" class="aode" fill="#0043ce"><tspan font-weight="700">Aw</tspan> telemetry + digital twin   ·   <tspan font-weight="700">An</tspan> RCA / forecast / verdict</text>
+  <text x="126" y="772" class="aode" fill="#0043ce"><tspan font-weight="700">De</tspan> confidence-gated, blast-radius-tiered</text>
+  <text x="126" y="792" class="aode" fill="#0043ce"><tspan font-weight="700">Ex</tspan> transactional actions · verify · auto-rollback</text>
 
-  <!-- ===================== AGENTS FOOTER · Gray 100 ===================== -->
-  <rect x="90" y="856" width="1340" height="104" fill="#161616"/>
+  <!-- ===================== AGENTS FOOTER · Blue 100 ===================== -->
+  <rect x="90" y="856" width="1340" height="104" fill="#001141"/>
   <text x="760" y="892" text-anchor="middle" class="footer-t" fill="#ffffff">AGENTS run the bracketed dimensions at every layer</text>
   <g class="footer-b">
-    <rect x="150" y="908" width="270" height="36" rx="18" fill="#393939" stroke="#6f6f6f"/>
-    <text x="285" y="931" text-anchor="middle" fill="#78a9ff">L1 · embedded reflex</text>
-    <rect x="470" y="908" width="270" height="36" rx="18" fill="#393939" stroke="#6f6f6f"/>
-    <text x="605" y="931" text-anchor="middle" fill="#08bdba">L2 · domain anchor</text>
-    <rect x="790" y="908" width="290" height="36" rx="18" fill="#393939" stroke="#6f6f6f"/>
-    <text x="935" y="931" text-anchor="middle" fill="#f1c21b">L3 · cross-domain arbiter</text>
-    <rect x="1130" y="908" width="300" height="36" rx="18" fill="#393939" stroke="#6f6f6f"/>
-    <text x="1280" y="931" text-anchor="middle" fill="#ff7eb6">L4 · NOC / intent supervisor</text>
+    <rect x="150" y="908" width="270" height="36" rx="18" fill="#002d9c" stroke="#0f62fe"/>
+    <text x="285" y="931" text-anchor="middle" fill="#d0e2ff">L1 · embedded reflex</text>
+    <rect x="470" y="908" width="270" height="36" rx="18" fill="#002d9c" stroke="#0f62fe"/>
+    <text x="605" y="931" text-anchor="middle" fill="#d0e2ff">L2 · domain anchor</text>
+    <rect x="790" y="908" width="290" height="36" rx="18" fill="#002d9c" stroke="#0f62fe"/>
+    <text x="935" y="931" text-anchor="middle" fill="#d0e2ff">L3 · cross-domain arbiter</text>
+    <rect x="1130" y="908" width="300" height="36" rx="18" fill="#002d9c" stroke="#0f62fe"/>
+    <text x="1280" y="931" text-anchor="middle" fill="#d0e2ff">L4 · NOC / intent supervisor</text>
   </g>
-  <g stroke="#8d8d8d" stroke-width="2.2">
+  <g stroke="#78a9ff" stroke-width="2.2">
     <line x1="422" y1="926" x2="466" y2="926"/>
     <path d="M462,922 L470,926 L462,930" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     <line x1="742" y1="926" x2="786" y2="926"/>
