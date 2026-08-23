@@ -1,0 +1,701 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Serving Interview Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  /* ---------- theme tokens: light is the bare :root ---------- */
+  :root{
+    --bg:#eef1f6;
+    --surface:#ffffff;
+    --surface-2:#f5f7fb;
+    --ink:#0c1626;
+    --ink-soft:#2b3a52;
+    --muted:#5a6a83;
+    --faint:#8695ac;
+    --line:#d8dfea;
+    --line-strong:#c3ccdb;
+    --accent:#1657d0;
+    --accent-deep:#0a2e6e;
+    --accent-soft:#e7eefc;
+    --warn:#a75e07;
+    --warn-bg:#fbf1de;
+    --warn-line:#e7b96a;
+    --good:#0c7a67;
+    --good-bg:#e2f5f0;
+    --good-line:#89cebe;
+    --math-bg:#f0f3f9;
+    --math-line:#cdd7e6;
+    --shadow:0 1px 2px rgba(12,22,38,.06),0 8px 24px rgba(12,22,38,.06);
+    --radius:10px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0a111c;
+      --surface:#111b2b;
+      --surface-2:#0d1624;
+      --ink:#e8eef8;
+      --ink-soft:#c6d2e4;
+      --muted:#93a2bd;
+      --faint:#6b7c98;
+      --line:#22324a;
+      --line-strong:#2d4059;
+      --accent:#5f9dff;
+      --accent-deep:#a8c6ff;
+      --accent-soft:#16233a;
+      --warn:#f0b45e;
+      --warn-bg:#221a0e;
+      --warn-line:#5c451f;
+      --good:#42cdb0;
+      --good-bg:#0d201d;
+      --good-line:#245049;
+      --math-bg:#0e1a2b;
+      --math-line:#25374f;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a111c;
+    --surface:#111b2b;
+    --surface-2:#0d1624;
+    --ink:#e8eef8;
+    --ink-soft:#c6d2e4;
+    --muted:#93a2bd;
+    --faint:#6b7c98;
+    --line:#22324a;
+    --line-strong:#2d4059;
+    --accent:#5f9dff;
+    --accent-deep:#a8c6ff;
+    --accent-soft:#16233a;
+    --warn:#f0b45e;
+    --warn-bg:#221a0e;
+    --warn-line:#5c451f;
+    --good:#42cdb0;
+    --good-bg:#0d201d;
+    --good-line:#245049;
+    --math-bg:#0e1a2b;
+    --math-line:#25374f;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+  code,kbd{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.9em}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---------- shell / layout ---------- */
+  .wrap{max-width:1200px;margin:0 auto;padding:0 clamp(16px,3vw,32px)}
+  .layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:start}
+  @media (max-width:900px){.layout{grid-template-columns:1fr}}
+
+  /* ---------- sidebar ---------- */
+  aside{position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto;
+    padding:26px 4px 40px;font-size:14px}
+  @media (max-width:900px){aside{position:static;max-height:none;border-bottom:1px solid var(--line);margin-bottom:8px}}
+  .toc-brand{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+  .toc a{display:block;color:var(--muted);padding:5px 10px;border-radius:7px;border-left:2px solid transparent;line-height:1.35}
+  .toc a:hover{color:var(--ink);background:var(--surface-2);text-decoration:none}
+  .toc .num{color:var(--faint);font-family:"IBM Plex Mono",monospace;font-size:12px;margin-right:7px}
+  .toc-sec{margin:16px 0 6px;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);padding-left:10px}
+
+  main{padding:26px 0 90px;min-width:0}
+
+  /* ---------- hero ---------- */
+  .hero{padding:14px 0 8px}
+  .kicker{font-family:"IBM Plex Mono",monospace;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 14px;font-weight:600}
+  h1{font-size:clamp(2rem,4.6vw,3.15rem);line-height:1.04;letter-spacing:-.02em;margin:0 0 18px;text-wrap:balance;font-weight:700}
+  h1 .em{color:var(--accent)}
+  .lede{font-size:clamp(1.05rem,1.7vw,1.28rem);color:var(--ink-soft);max-width:64ch;margin:0 0 22px;line-height:1.5}
+  .meta-row{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 6px}
+  .chip{font-family:"IBM Plex Mono",monospace;font-size:12.5px;padding:5px 11px;border:1px solid var(--line-strong);
+    border-radius:100px;color:var(--muted);background:var(--surface)}
+  .chip b{color:var(--ink);font-weight:600}
+
+  .toolbar{display:flex;justify-content:flex-end;margin:-8px 0 0}
+  .toggle{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;background:var(--surface);
+    color:var(--muted);border:1px solid var(--line-strong);border-radius:100px;padding:6px 13px;cursor:pointer}
+  .toggle:hover{color:var(--ink);border-color:var(--accent)}
+
+  /* ---------- section rhythm ---------- */
+  section{scroll-margin-top:20px}
+  .module{margin-top:60px;padding-top:30px;border-top:1px solid var(--line)}
+  .mod-head{display:flex;align-items:baseline;gap:16px;margin-bottom:6px}
+  .mod-num{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:15px;color:var(--accent);
+    border:1px solid var(--accent);border-radius:8px;padding:3px 9px;white-space:nowrap;flex:none}
+  h2{font-size:clamp(1.5rem,2.9vw,2.05rem);line-height:1.12;letter-spacing:-.015em;margin:0;font-weight:700;text-wrap:balance}
+  h3{font-size:1.16rem;letter-spacing:-.01em;margin:34px 0 12px;font-weight:600;color:var(--ink)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin:30px 0 12px;font-weight:600}
+  p{margin:0 0 15px;max-width:72ch}
+  .mod-lede{font-size:1.06rem;color:var(--ink-soft);max-width:70ch;margin:16px 0 6px}
+  strong{font-weight:600;color:var(--ink)}
+  em.term{font-style:normal;font-weight:600;color:var(--accent-deep)}
+
+  /* ---------- panels / cards ---------- */
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 24px;box-shadow:var(--shadow);margin:20px 0}
+  .panel.tight{padding:18px 20px}
+
+  /* ---------- glossary ---------- */
+  dl.gloss{margin:6px 0 0;display:grid;gap:0}
+  dl.gloss div{padding:12px 0;border-top:1px solid var(--line)}
+  dl.gloss div:first-child{border-top:0}
+  dl.gloss dt{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:14px;color:var(--accent-deep);margin-bottom:3px}
+  dl.gloss dd{margin:0;color:var(--ink-soft);font-size:15px;max-width:78ch}
+
+  /* ---------- gotcha callouts ---------- */
+  .gotcha{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:var(--radius);
+    padding:14px 16px 14px 16px;margin:14px 0;max-width:80ch}
+  .gotcha .tag{display:inline-flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:11px;
+    font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--warn);margin-bottom:6px}
+  .gotcha .tri{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;
+    border-bottom:9px solid var(--warn)}
+  .gotcha .claim{font-weight:600;color:var(--ink);margin:0 0 4px}
+  .gotcha .why{margin:0;color:var(--ink-soft);font-size:14.5px}
+  .gotcha.fix .tag{color:var(--accent)}
+  .gotcha.fix{background:var(--accent-soft);border-color:var(--line-strong)}
+  .gotcha.fix .tri{display:none}
+
+  /* ---------- math / worked-number blocks ---------- */
+  .math{background:var(--math-bg);border:1px solid var(--math-line);border-radius:var(--radius);
+    padding:14px 16px;margin:12px 0;font-family:"IBM Plex Mono",monospace;font-size:13.5px;line-height:1.62;
+    color:var(--ink-soft);overflow-x:auto;max-width:82ch}
+  .math .lbl{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:6px;font-weight:600}
+  .math b{color:var(--ink);font-weight:600}
+  .math .hl{color:var(--accent-deep);font-weight:600}
+
+  /* ---------- Q&A ---------- */
+  details.qa{border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;background:var(--surface);overflow:hidden}
+  details.qa[open]{box-shadow:var(--shadow)}
+  details.qa summary{cursor:pointer;padding:14px 44px 14px 18px;font-weight:600;color:var(--ink);position:relative;list-style:none;line-height:1.4}
+  details.qa summary::-webkit-details-marker{display:none}
+  details.qa summary::after{content:"+";position:absolute;right:18px;top:12px;font-family:"IBM Plex Mono",monospace;
+    font-size:20px;color:var(--accent);font-weight:400}
+  details.qa[open] summary::after{content:"–"}
+  details.qa summary:hover{color:var(--accent)}
+  details.qa .ans{padding:2px 18px 18px;color:var(--ink-soft);font-size:15px;border-top:1px solid var(--line)}
+  details.qa .ans p{margin:13px 0 0}
+  .qa-q{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--faint);letter-spacing:.1em;text-transform:uppercase}
+
+  /* ---------- tables ---------- */
+  .tbl-scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:var(--radius)}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+  thead th{background:var(--surface-2);font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);font-weight:600}
+  tbody tr:last-child td{border-bottom:0}
+  td.mono,th.mono{font-family:"IBM Plex Mono",monospace}
+  td .n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:var(--surface-2)}
+
+  /* ---------- misc ---------- */
+  .callout-strong{border-left:3px solid var(--accent);padding:4px 0 4px 18px;margin:18px 0;color:var(--ink-soft);max-width:74ch}
+  .callout-strong b{color:var(--ink)}
+  ul.clean{margin:12px 0;padding-left:22px;max-width:74ch}
+  ul.clean li{margin:7px 0;color:var(--ink-soft)}
+  ul.clean li b{color:var(--ink)}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:680px){.two-col{grid-template-columns:1fr}}
+  hr.soft{border:0;border-top:1px solid var(--line);margin:26px 0}
+  .foot{margin-top:70px;padding-top:22px;border-top:1px solid var(--line);color:var(--faint);font-size:13.5px}
+  .roofline{width:100%;max-width:560px;height:auto;display:block;margin:8px 0}
+  svg text{font-family:"IBM Plex Mono",monospace}
+  .badge{font-family:"IBM Plex Mono",monospace;font-size:11px;padding:2px 7px;border-radius:5px;background:var(--accent-soft);
+    color:var(--accent-deep);border:1px solid var(--line-strong);white-space:nowrap}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+</style>
+
+<div class="wrap">
+<div class="layout">
+
+<!-- ===================== SIDEBAR ===================== -->
+<aside>
+  <p class="toc-brand">Serving&nbsp;Interview&nbsp;Kit</p>
+  <nav class="toc">
+    <a href="#spine"><span class="num">00</span>First principles</a>
+    <a href="#traps"><span class="num">★</span>Traps that fail people</a>
+    <a href="#cheat"><span class="num">▤</span>Whiteboard cheat-sheet</a>
+    <div class="toc-sec">Modules</div>
+    <a href="#m1"><span class="num">01</span>Serving engines &amp; vLLM</a>
+    <a href="#m2"><span class="num">02</span>KV-cache economics</a>
+    <a href="#m3"><span class="num">03</span>Quantization</a>
+    <a href="#m4"><span class="num">04</span>GPU sizing &amp; hardware</a>
+    <a href="#m5"><span class="num">05</span>Latency &amp; throughput</a>
+    <a href="#m6"><span class="num">06</span>Cost &amp; build-vs-buy</a>
+    <a href="#m7"><span class="num">07</span>Productionization</a>
+    <div class="toc-sec">Close</div>
+    <a href="#closer"><span class="num">✓</span>60-second script</a>
+  </nav>
+</aside>
+
+<!-- ===================== MAIN ===================== -->
+<main>
+  <div class="toolbar"><button class="toggle mono" id="themeBtn" type="button" aria-label="Toggle theme">◐ theme</button></div>
+
+  <!-- HERO -->
+  <header class="hero">
+    <p class="kicker">LLM Serving &amp; Inference Infrastructure</p>
+    <h1>Everything in serving is <span class="em">two phases and one roofline</span>.</h1>
+    <p class="lede">Prefill is compute-bound; decode is memory-bandwidth-bound; the KV cache — not the weights — usually caps your batch. Get those three facts right and every question about vLLM, quantization, GPU sizing, latency, and cost falls out by first principles. Get them backwards and you'll "fix" latency with the wrong hardware. This kit teaches the mechanisms, the whiteboard math, and — flagged throughout — the gotchas that catch candidates.</p>
+    <div class="meta-row">
+      <span class="chip"><b>7</b> modules</span>
+      <span class="chip"><b>~90</b> gotchas &amp; corrections</span>
+      <span class="chip"><b>5</b> formulas to memorize</span>
+      <span class="chip">GPU specs current to <b>early 2026</b></span>
+    </div>
+    <p class="lede" style="font-size:.98rem;color:var(--muted);margin-top:16px">Numbers are approximate and config/version-dependent — cite them as "~" and state assumptions, exactly as you should in the room. Every figure here survived an adversarial fact-check pass; the ones that pass most often trip people are called out as <span class="badge">GOTCHA</span>.</p>
+  </header>
+
+  <!-- ===================== 00 FIRST PRINCIPLES ===================== -->
+  <section id="spine" class="module">
+    <div class="mod-head"><span class="mod-num">00</span><h2>The spine: prefill vs decode, the roofline, and why TP is a latency lever</h2></div>
+    <p class="mod-lede">If you can say this section out loud cleanly, you can reason your way through most of the interview. Everything downstream is a corollary.</p>
+
+    <h3>Two workloads wearing one model</h3>
+    <p>A request is <em class="term">prefill</em> (one parallel forward pass over the whole prompt, building the KV cache, setting <span class="mono">TTFT</span>) then <em class="term">decode</em> (autoregressive, one token per forward pass, setting <span class="mono">TPOT/ITL</span>). They sit on opposite sides of the roofline:</p>
+    <ul class="clean">
+      <li><b>Prefill = compute-bound.</b> You multiply weights against <span class="mono">N</span> prompt tokens at once, so each loaded weight is reused across all N — arithmetic intensity is high, you clear the ridge point, the tensor cores are the bottleneck.</li>
+      <li><b>Decode = memory-bandwidth-bound.</b> At small batch you push ~1 token through the weights per step, reusing each weight once (intensity ≈ 1–2 FLOP/byte). The ALUs sit idle; step time ≈ <span class="mono">bytes_read ÷ HBM_bandwidth</span>.</li>
+    </ul>
+
+    <div class="callout-strong"><b>The one-line roofline:</b> performance = min(peak_FLOPS, arithmetic_intensity × bandwidth). The ridge point (where you flip from bandwidth- to compute-bound) is <span class="mono">peak_FLOPS ÷ bandwidth</span> ≈ <b>~295 FLOP/byte</b> for H100 BF16 (989 TFLOPS ÷ 3.35 TB/s). Decode at ~1–2 lives far to the left; large-batch prefill lives on the compute roof.</p></div>
+
+    <svg class="roofline" viewBox="0 0 560 300" role="img" aria-label="Roofline: decode is bandwidth-bound, prefill is compute-bound">
+      <line x1="55" y1="250" x2="535" y2="250" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <line x1="55" y1="250" x2="55" y2="30" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <text x="295" y="288" fill="var(--muted)" font-size="12" text-anchor="middle">arithmetic intensity (FLOP / byte, log)</text>
+      <text x="20" y="140" fill="var(--muted)" font-size="12" text-anchor="middle" transform="rotate(-90 20 140)">achievable FLOP/s</text>
+      <!-- bandwidth roof (sloped) -->
+      <line x1="55" y1="250" x2="300" y2="70" stroke="var(--accent)" stroke-width="2.5"/>
+      <!-- compute roof (flat) -->
+      <line x1="300" y1="70" x2="535" y2="70" stroke="var(--accent-deep)" stroke-width="2.5"/>
+      <!-- ridge -->
+      <line x1="300" y1="70" x2="300" y2="250" stroke="var(--faint)" stroke-width="1" stroke-dasharray="4 4"/>
+      <text x="300" y="266" fill="var(--faint)" font-size="11" text-anchor="middle">ridge ~295</text>
+      <!-- decode marker -->
+      <circle cx="110" cy="210" r="5" fill="var(--warn)"/>
+      <text x="120" y="207" fill="var(--warn)" font-size="12">decode (~1–2) → bandwidth-bound</text>
+      <!-- prefill marker -->
+      <circle cx="430" cy="70" r="5" fill="var(--good)"/>
+      <text x="420" y="58" fill="var(--good)" font-size="12" text-anchor="end">prefill (batched) → compute-bound</text>
+    </svg>
+
+    <h3>The four corollaries interviewers actually test</h3>
+    <ul class="clean">
+      <li><b>Quantization speeds decode, not necessarily prefill.</b> Fewer bytes/weight → faster bandwidth-bound decode. Prefill only speeds up if the hardware runs the low-precision <em>matmul</em> natively (FP8 on Ada/Hopper, FP4 on Blackwell). Weight-only INT4 that dequantizes to FP16 for the GEMM gives ~zero prefill win — sometimes a small loss.</li>
+      <li><b>Batching is how you escape the decode wall.</b> At batch B the weights are read once but produce B tokens, so aggregate throughput rises ~linearly with B — until you hit the ridge point (compute-bound) or run out of KV memory.</li>
+      <li><b>Tensor parallelism aggregates HBM bandwidth</b> — so it's a <em>latency</em> lever, not just a "make it fit" lever. Split weights across N NVLinked GPUs and each streams 1/N of them from its own bandwidth in parallel, cutting per-token weight-read ~N× (minus all-reduce overhead).</li>
+      <li><b>Pick GPUs on HBM capacity &amp; bandwidth first, TFLOPS second</b> — for anything decode-heavy.</li>
+    </ul>
+
+    <div class="gotcha">
+      <span class="tag"><span class="tri"></span>Gotcha · the #1 red flag</span>
+      <p class="claim">"Decode is compute/FLOPs-bound, so a bigger-TFLOPS GPU speeds token generation."</p>
+      <p class="why">Backwards. Decode at low-to-moderate batch is <b>memory-bandwidth-bound</b>. More TFLOPS at similar bandwidth barely helps TPOT; more HBM bandwidth (H200 over H100), quantization, or a bigger batch does. This single reversal invalidates most follow-up answers, so anchor on it.</p>
+    </div>
+  </section>
+
+  <!-- ===================== TRAPS ===================== -->
+  <section id="traps" class="module">
+    <div class="mod-head"><span class="mod-num">★</span><h2>Traps that fail candidates</h2></div>
+    <p class="mod-lede">The highest-value list here. Each is a thing that "sounds right," is common, and is wrong — several are 2×–1000× numeric errors caught in fact-checking. Master these and you'll out-precise most candidates.</p>
+
+    <div class="gotcha">
+      <span class="tag"><span class="tri"></span>Gotcha · 1000× cost error</span>
+      <p class="claim">"$16/hr node at 3000 tok/s ≈ $0.0015 per 1M tokens."</p>
+      <p class="why">3000 tok/s × 3600 s = <b>10.8 million</b> tokens/hr (not 10,800M). So raw GPU cost ≈ $16 ÷ 10.8 ≈ <b>$1.48 / 1M output tokens</b>. $0.0015 is below wholesale token prices by ~1000× — the most dangerous number you can blurt. Always: <span class="mono">$/1M = GPU_$per_hr ÷ (tok/s × 3600 ÷ 1e6)</span>.</p>
+    </div>
+
+    <div class="gotcha">
+      <span class="tag"><span class="tri"></span>Gotcha · TP aggregates bandwidth</span>
+      <p class="claim">"70B FP16 decodes at ~24 tok/s on an H100 (140 GB ÷ 3.35 TB/s)."</p>
+      <p class="why">140 GB of FP16 weights <b>doesn't fit</b> on one 80 GB H100 — you're forced to TP≥2, and TP aggregates HBM bandwidth. On 2×H100 each streams ~70 GB from its own 3.35 TB/s in parallel → ~21 ms/token → <b>~48 tok/s</b>, not 24. The 24 tok/s figure only holds for a hypothetical single 140 GB device (≈ what an H200's 4.8 TB/s gives: ~34 tok/s — but with ~1 GB left for KV, unusable at batch).</p>
+    </div>
+
+    <div class="gotcha">
+      <span class="tag"><span class="tri"></span>Gotcha · FP8 is not Hopper-only</span>
+      <p class="claim">"Native FP8 needs Hopper."</p>
+      <p class="why">FP8 (E4M3/E5M2) tensor cores exist on <b>Ada Lovelace</b> (RTX 4090, L4, L40, L40S), <b>Hopper</b>, and <b>Blackwell</b>. Only <b>FP4 / MXFP4 / NVFP4</b> native <em>math</em> requires Blackwell — on Hopper, MXFP4 is weight-only compression dequantized to BF16/FP8 for the matmul (a memory/bandwidth win, no FP4 compute speedup). So "gpt-oss in MXFP4 on an H100" is faster only because it moves fewer bytes.</p>
+    </div>
+
+    <div class="gotcha">
+      <span class="tag"><span class="tri"></span>Gotcha · GQA math</span>
+      <p class="claim">"GQA with 8 KV heads saves 64×."</p>
+      <p class="why">KV savings = <span class="mono">n_query_heads / n_kv_heads</span>. Llama-3-70B is 64 query heads / 8 KV heads = <b>8×</b>, not 64×. Only <b>MQA</b> (1 KV head) gives the full n_heads factor. And KV depends on <em>KV</em> heads, never query heads — using query heads is the classic 8× overcount.</p>
+    </div>
+
+    <div class="gotcha">
+      <span class="tag"><span class="tri"></span>Gotcha · sparsity spec</span>
+      <p class="claim">"H100 does 1979 TFLOPS BF16 (dense ~989 with sparsity halving)."</p>
+      <p class="why">Get the direction right: <b>989 TFLOPS is dense BF16</b>; 1979 is BF16 <em>with 2:4 sparsity</em>. For FP8 it's <b>1979 dense</b> / 3958 sparse. Structured sparsity rarely applies to LLM inference — always quote the <b>dense</b> figure, or you inflate compute estimates 2×.</p>
+    </div>
+
+    <div class="gotcha">
+      <span class="tag"><span class="tri"></span>Gotcha · MoE memory vs compute</span>
+      <p class="claim">"gpt-oss-120b only activates ~5B params, so it needs ~5B worth of VRAM."</p>
+      <p class="why">MoE decouples the two: <b>memory = total params</b> (all experts must be resident — ~62 GB in MXFP4 for 120b) but <b>compute &amp; decode-bandwidth = active params</b> (~5.1B). Sizing VRAM off active params under-provisions catastrophically; sizing throughput off total params over-provisions. Both halves are true at once. (DeepSeek-V3: 671B total ≈ <b>~671 GB in FP8</b>, ~37B active → multi-node.)</p>
+    </div>
+
+    <div class="gotcha">
+      <span class="tag"><span class="tri"></span>Gotcha · output pricing</span>
+      <p class="claim">"Output tokens cost 5–20× input."</p>
+      <p class="why">API <em>prices</em> put output at ~<b>3–5×</b> input (e.g. Claude ~5×, GPT-4o ~4×) because decode is bandwidth-bound and input prefill amortizes across the batch. The internal <em>cost-to-serve</em> ratio can be larger and workload-dependent, but don't conflate that with the priced multiple — quote 3–5× and separate the two if pressed.</p>
+    </div>
+
+    <div class="gotcha">
+      <span class="tag"><span class="tri"></span>Gotcha · spec-decoding is lossless-in-distribution</span>
+      <p class="claim">"Speculative decoding produces exactly what the target model would output."</p>
+      <p class="why">It's <b>distribution-preserving</b> (a valid sample from the target's distribution via rejection sampling), not the identical token sequence a given run emits (except at temp 0/greedy). And acceptance α <b>collapses at high temperature / high-entropy tasks</b>, the drafter must share the target's tokenizer, and it <b>helps at low batch, hurts at high batch</b> (the GPU is already compute-saturated). It's a low-concurrency latency tool, not a free throughput win.</p>
+    </div>
+
+    <div class="gotcha">
+      <span class="tag"><span class="tri"></span>Gotcha · PagedAttention ≠ a kernel</span>
+      <p class="claim">"PagedAttention makes attention faster."</p>
+      <p class="why">It's a <b>memory manager</b> (OS-paging for KV → near-zero fragmentation → bigger batches → higher throughput), not a faster attention op. The IO-aware kernel that actually speeds attention is <b>FlashAttention</b> — a different, complementary thing.</p>
+    </div>
+
+    <div class="gotcha">
+      <span class="tag"><span class="tri"></span>Gotcha · "quantized to 4-bit" ≠ 0.5 B/weight</span>
+      <p class="claim">"INT4 is exactly 0.5 bytes/weight."</p>
+      <p class="why">Group scales and zero-points add up: real INT4-g128 ≈ <b>4.25 bpw</b>, MXFP4 4.25, NVFP4 4.5, GGUF Q4_K_M ~4.8. So "4-bit" is ~0.53–0.6 B/weight — off by 5–20% if you use 0.5, and KV/activations aren't quantized just because weights are.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CHEAT SHEET ===================== -->
+  <section id="cheat" class="module">
+    <div class="mod-head"><span class="mod-num">▤</span><h2>Whiteboard cheat-sheet</h2></div>
+    <p class="mod-lede">The five formulas and two tables to reproduce cold. If you can derive these live, the numeric follow-ups are yours.</p>
+
+    <div class="math">
+      <span class="lbl">1 · Weight VRAM</span>
+      <b>bytes = params × bytes_per_weight</b>  (FP16=2, FP8/INT8=1, 4-bit≈0.53)
+      <br>70B → <span class="hl">140 GB</span> FP16 · <span class="hl">70 GB</span> FP8 · <span class="hl">~37 GB</span> 4-bit  |  8B → 16 / 8 / ~4.3 GB
+    </div>
+    <div class="math">
+      <span class="lbl">2 · KV cache per token</span>
+      <b>2 × n_layers × n_kv_heads × head_dim × bytes_per_elem</b>  (×seq_len ×batch for total)
+      <br>Llama-3-70B (80, 8 KV, 128, FP16) → 2·80·8·128·2 = 327,680 B ≈ <span class="hl">0.32 MB/tok</span>
+      <br>Llama-3-8B (32, 8 KV, 128, FP16) → <span class="hl">128 KB/tok</span>  ·  MHA-equiv 70B → 2.62 MB/tok (8× worse)
+    </div>
+    <div class="math">
+      <span class="lbl">3 · Decode floor (bandwidth-bound)</span>
+      <b>tok/s ≈ HBM_BW ÷ bytes_read_per_token</b>  (bytes ≈ weights-per-GPU + KV read; real ≈ 60–80% MBU)
+      <br>70B FP8 on 2×H100 TP2 → ~35 GB/GPU ÷ 3.35 TB/s ≈ <span class="hl">~48 tok/s</span> single-stream ceiling
+    </div>
+    <div class="math">
+      <span class="lbl">4 · Prefill FLOPs → TTFT</span>
+      <b>≈ 2 × params × prompt_tokens</b>  (+ O(N²) attention term at long context)
+      <br>70B, 4k prompt → 2·70e9·4096 ≈ 5.7e14 FLOP ÷ (~700 TFLOP/s achieved) ≈ <span class="hl">~0.8 s</span> compute
+    </div>
+    <div class="math">
+      <span class="lbl">5 · Cost per 1M tokens</span>
+      <b>$/1M = GPU_$per_hr ÷ (tok/s × 3600 ÷ 1e6)</b>  → utilization dominates
+      <br>$16/hr node @ 3000 tok/s → <span class="hl">~$1.48/1M</span>  ·  $2.50/hr @ 2000 tok/s → ~$0.35/1M  ·  @ 400 tok/s → ~$1.74/1M
+    </div>
+
+    <h3>GPU lineup — what matters for serving</h3>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>GPU</th><th class="mono">HBM</th><th class="mono">Bandwidth</th><th class="mono">BF16 dense</th><th>Low-precision</th><th>Best for</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">H100 SXM</td><td class="n">80 GB</td><td class="n">~3.35 TB/s</td><td class="n">~989 TF</td><td>FP8 (1979 dense)</td><td>throughput workhorse</td></tr>
+          <tr><td class="mono">H200</td><td class="n">141 GB</td><td class="n">~4.8 TB/s</td><td class="n">~989 TF</td><td>FP8</td><td>decode/capacity (same die)</td></tr>
+          <tr><td class="mono">A100 80GB</td><td class="n">80 GB</td><td class="n">~2.0 TB/s</td><td class="n">~312 TF</td><td>no FP8</td><td>legacy / BF16</td></tr>
+          <tr><td class="mono">B200</td><td class="n">192 GB</td><td class="n">~8 TB/s</td><td class="n">~2.2 PF*</td><td>FP4 ~9 PF dense</td><td>frontier &amp; FP4 serving</td></tr>
+          <tr><td class="mono">L40S</td><td class="n">48 GB</td><td class="n">~864 GB/s</td><td class="n">~362 TF</td><td>FP8 (Ada)</td><td>prefill/vision; weak decode</td></tr>
+          <tr><td class="mono">L4</td><td class="n">24 GB</td><td class="n">~300 GB/s</td><td class="n">~121 TF</td><td>FP8 (Ada)</td><td>small models / edge (72 W)</td></tr>
+          <tr><td class="mono">RTX 4090</td><td class="n">24 GB</td><td class="n">~1.0 TB/s</td><td class="n">~165 TF</td><td>FP8 (Ada), no NVLink</td><td>dev / small models</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13px;color:var(--faint);margin-top:-6px">*Blackwell headline TFLOPS vary by SKU/precision and often quote sparsity — halve for dense. Treat all specs as "~" and confirm the dense number.</p>
+
+    <h3>The two "same letter, different axis" scales</h3>
+    <div class="two-col">
+      <div class="panel tight"><b>Interconnect, like-for-like</b><br><span style="color:var(--ink-soft);font-size:15px">NVLink4 (H100) ≈ 900 GB/s <em>bidirectional</em> per GPU (~450/dir); NVLink5 (B200) ≈ 1.8 TB/s. PCIe Gen5 x16 ≈ 64 GB/s <em>per direction</em> (~128 bidir). Compared correctly the ratio is <b>~7×</b>, not 14× — but the conclusion stands: <b>TP needs NVLink, stay intra-node</b>.</span></div>
+      <div class="panel tight"><b>Effective vs peak</b><br><span style="color:var(--ink-soft);font-size:15px">Apply the haircut consistently: decode at <b>~60–80% MBU</b> (bandwidth), prefill at <b>~40–60% MFU</b> (FLOPs). Quoting peak for one roof and achievable for the other is a common stumble.</span></div>
+    </div>
+  </section>
+
+  <!-- ===================== MODULE 1 ===================== -->
+  <section id="m1" class="module">
+    <div class="mod-head"><span class="mod-num">01</span><h2>Serving engines &amp; the inference loop</h2></div>
+    <p class="mod-lede">vLLM, continuous batching, PagedAttention, chunked prefill, prefix caching, speculative decoding, and TP/PP/EP — the machinery that keeps expensive GPUs busy across two opposite regimes.</p>
+
+    <p class="eyebrow">Say-it-out-loud framing</p>
+    <p>"I decide what I'm optimizing — TTFT, TPOT, or throughput/$ — then pick the engine, batching policy, KV strategy, and parallelism that move <em>that</em> number, because prefill and decode pull in opposite directions."</p>
+
+    <h3>Key terms</h3>
+    <dl class="gloss">
+      <div><dt>Continuous / in-flight batching</dt><dd>Iteration-level scheduling: after every decode step, finished sequences are retired (KV freed) and queued ones admitted, so the running batch is continuously refilled. 2–20× throughput over static batching, which runs at the pace of its longest sequence. The single biggest throughput lever; pioneered by Orca, standard in vLLM/TGI/TRT-LLM/SGLang.</dd></div>
+      <div><dt>PagedAttention</dt><dd>vLLM's KV memory manager modeled on OS virtual memory: KV in fixed blocks (~16 tokens), non-contiguous, with a per-sequence block table. Cuts KV waste from ~60–80% to &lt;4%, which is what lets you run a bigger batch. Enables copy-on-write prefix sharing. It is memory efficiency, not a faster kernel.</dd></div>
+      <div><dt>Chunked prefill</dt><dd>Split a long prompt's prefill into token-budget chunks interleaved with others' decode steps, so a big prompt doesn't stall everyone's token stream (bounds TPOT spikes). Trades a little TTFT for smooth ITL — a deliberate SLO knob, not free.</dd></div>
+      <div><dt>Automatic Prefix Caching (APC) / RadixAttention</dt><dd>Reuse KV blocks for identical leading tokens across requests (shared system prompts, few-shot, chat history). vLLM hashes block content; SGLang uses a radix tree. Skips that prefix's prefill → lower TTFT. Requires an <b>exact token-level</b> match and blocks are LRU-evictable — a runtime property, not a guarantee.</dd></div>
+      <div><dt>Speculative decoding</dt><dd>A cheap drafter proposes k tokens; the target verifies all k in one forward pass and accepts the longest correct prefix via rejection sampling (distribution-preserving). Drafters: separate draft model, Medusa (extra heads), EAGLE (feature-level head, current SOTA acceptance), n-gram/prompt-lookup (free, great on high input-overlap like code/RAG).</dd></div>
+      <div><dt>TP / PP / EP</dt><dd>Tensor parallelism shards each weight matrix (2 all-reduces/layer → needs NVLink, intra-node, and lowers the decode floor). Pipeline parallelism splits layers into stages (cheap point-to-point → tolerates cross-node, but adds bubbles). Expert parallelism spreads MoE experts (all-to-all routing each layer, latency- and load-imbalance-sensitive). Compose: TP within a node × PP across nodes; EP×TP for big MoE; DP replicas for throughput.</dd></div>
+      <div><dt>Prefill/decode disaggregation</dt><dd>Run prefill and decode on separate GPU pools, shipping KV between them (DistServe, Mooncake). Each pool tuned for its regime; no prefill→decode interference. Cost: KV transfer over the interconnect, largely hideable by overlapping.</dd></div>
+      <div><dt>The engine menu</dt><dd><b>vLLM</b> default for throughput/flexibility (PagedAttention, APC). <b>TensorRT-LLM</b> lowest latency on NVIDIA via compiled kernels, rigid per-model builds. <b>SGLang</b> RadixAttention + structured/agentic workloads. <b>TGI</b> HF-ecosystem production server. <b>llama.cpp</b> GGUF edge/local; <b>Ollama</b> its dev wrapper — not fleet serving engines.</dd></div>
+    </dl>
+
+    <h3>Worked numbers</h3>
+    <div class="math"><span class="lbl">Decode-step floor with TP</span>70B FP8 = 70 GB. TP8 → ~8.75 GB/GPU/step ÷ 3.35 TB/s ≈ <span class="hl">2.6 ms</span> → ~380 tok/s ceiling before overhead. Halve weights (further quant) and the floor roughly halves — a bandwidth story, not a FLOPs story.</div>
+    <div class="math"><span class="lbl">Speculative decoding tokens/pass</span>tokens generated/pass ≈ (1−α<sup>k+1</sup>)/(1−α). α=0.8, k=4 → (1−0.328)/0.2 = <span class="hl">3.36</span> (includes the 1 free bonus token). α=0.5, k=4 → 1.94, likely a net loss after drafter cost.</div>
+
+    <h3>Gotchas</h3>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Continuous batching just means a bigger batch size."</p><p class="why">It's iteration-level <em>scheduling</em> (admit/retire per step). Static batching with a huge batch still head-of-line-blocks on the longest sequence. The policy, not the number, delivers the 2–20×.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Run tensor parallelism across nodes for scale."</p><p class="why">TP does 2 all-reduces/layer on the critical path — it needs NVLink and is intra-node (≤8 GPUs). Across nodes use PP (or EP for MoE); TP over PCIe/IB can make 2 GPUs slower than 1.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Prefix caching helps every workload."</p><p class="why">Only when requests <em>share</em> leading tokens. A per-request variable (timestamp, user-id) interpolated at the <em>front</em> of the system prompt yields near-zero hit rate — content hashing is token-exact.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Ollama / llama.cpp is our production serving engine."</p><p class="why">Great local/dev UX, not high-QPS multi-tenant serving with continuous batching. The fleet answers are vLLM / TRT-LLM / TGI / SGLang.</p></div>
+
+    <h3>Rehearsed answers</h3>
+    <details class="qa"><summary>Walk me through the two phases and why they stress the GPU differently.</summary><div class="ans"><p class="qa-q">Model answer</p><p>Prefill processes the whole prompt in parallel and builds the KV cache — compute-bound because each weight byte is reused across all N prompt tokens, so it approaches the FLOP roofline and its latency scales with prompt length; it sets TTFT. Decode is autoregressive, one token per pass, so at low batch each step re-reads all weights + KV to emit one token — arithmetic intensity ≈ batch size, far below the ridge point, making it memory-bandwidth-bound; TPOT ≈ bytes_read ÷ bandwidth. So batching and quantization mainly help decode, prefill benefits from raw compute and prefix caching, and end-to-end ≈ TTFT + (out−1)×TPOT — decode dominates wall-clock for long outputs.</p></div></details>
+    <details class="qa"><summary>Explain PagedAttention and the exact problem it solves.</summary><div class="ans"><p class="qa-q">Model answer</p><p>Naive serving reserves a contiguous KV buffer sized to max_len per request → massive internal fragmentation (reserve 4k, generate 200) and external fragmentation. Effective utilization was often 20–40%. PagedAttention borrows OS virtual memory: KV in fixed ~16-token blocks, non-contiguous, with a per-sequence block table mapped on demand. Waste drops below ~4%, the reclaimed memory runs a much larger batch (that's the 2–4× throughput), and shared block pointers + copy-on-write enable prefix caching. It's a memory-efficiency mechanism whose payoff is bigger batches — not a faster attention kernel (that's FlashAttention).</p></div></details>
+    <details class="qa"><summary>How does speculative decoding speed things up, and when would you NOT use it?</summary><div class="ans"><p class="qa-q">Model answer</p><p>Decode is bandwidth-bound, so one target forward pass costs about the same whether it verifies 1 or k+1 tokens — the weights are read once. A cheap drafter proposes k, the target verifies in one pass and accepts the longest correct prefix via rejection sampling (distribution-preserving, not token-identical). With α≈0.8, k=4 you get ~3.3 tokens/pass. I'd NOT use it at high concurrency — the GPU is already compute-saturated by batching, so the extra verify + rejected work slows you — or when acceptance is low (poorly aligned drafter, high temperature / high-entropy generation), where it's a net loss. Drafter must share the tokenizer. It's a low-concurrency latency tool; pick n-gram for high-overlap tasks, EAGLE for general chat.</p></div></details>
+    <details class="qa"><summary>When do you reach for TP vs PP vs EP?</summary><div class="ans"><p class="qa-q">Model answer</p><p>TP shards each weight matrix and all-reduces twice per block on the critical path — needs NVLink, intra-node, ≤8 GPUs; it cuts per-GPU weight-read so it lowers decode latency <em>and</em> fits big models. PP assigns layer-ranges to stages, passing only activations (cheap) — tolerates cross-node links and scales beyond one node, at the cost of pipeline bubbles (mitigate with micro-batching) and it doesn't cut per-GPU weight-read. EP is MoE-specific: experts on different GPUs with an all-to-all to route tokens each layer — scales expert memory, bottlenecked by all-to-all latency and hot-expert imbalance. Compose them: TP in a node × PP across nodes, EP×TP for large MoE, DP replicas for throughput.</p></div></details>
+  </section>
+
+  <!-- ===================== MODULE 2 ===================== -->
+  <section id="m2" class="module">
+    <div class="mod-head"><span class="mod-num">02</span><h2>KV-cache economics &amp; attention memory</h2></div>
+    <p class="mod-lede">The formula, GQA/MQA/MLA, paging, prefix caching, quantized/offloaded KV — and why KV capacity, not weights, is the thing that actually caps your batch, throughput, and $/token.</p>
+
+    <p class="eyebrow">The whole point in one sentence</p>
+    <p>Decode must stream all weights <em>and</em> the full KV cache from HBM every step, and KV grows linearly in both context length and batch — so "the model fits in 80 GB" is necessary but wildly insufficient; the real question is how much HBM is <em>left</em> for KV and how many token-slots that buys.</p>
+
+    <h3>Key terms</h3>
+    <dl class="gloss">
+      <div><dt>KV cache</dt><dd>Stored per-layer Key/Value projections for all past tokens, so decode does a matrix-vector attention read instead of recomputing O(n²) each step. Size = <span class="mono">2 × n_layers × n_kv_heads × head_dim × bytes × seq_len × batch</span>. The "2" is exactly K and V — don't drop it, don't double it.</dd></div>
+      <div><dt>MHA → GQA → MQA</dt><dd>KV scales with <b>n_kv_heads</b>, not query heads. MHA: one KV head per query head (max). GQA: query heads share G groups → reduction n_heads/G (Llama-3-70B: 64/8 = 8×, near-MHA quality, the default). MQA: 1 KV head (max savings, some quality/stability cost).</dd></div>
+      <div><dt>MLA (Multi-head Latent Attention)</dt><dd>DeepSeek-V2/V3: cache a low-rank latent (~512) + a small decoupled RoPE key (~64) per token per layer, up-projecting to per-head K/V on the fly. Decouples KV from head count → ~50–60× smaller than MHA, beating GQA. An architecture choice (extra compute, custom kernels), not a serving flag.</dd></div>
+      <div><dt>Sliding-window / local attention</dt><dd>Caps KV to the window, breaking linear growth — used by Mistral, Gemma 2 (alternating global/local layers), gpt-oss (alternating dense/sliding). Sizing these at full context length overestimates KV.</dd></div>
+      <div><dt>KV quantization</dt><dd>Store K/V in FP8/INT8 (independent of weight dtype) — halves/quarters KV footprint <em>and</em> KV read bandwidth. Needs kernel support (FlashInfer/FA3). <b>K is harder than V</b> (per-channel outliers → KIVI/KVQuant); naive per-tensor INT4 on K hurts long-context recall far more than on V.</dd></div>
+      <div><dt>vLLM knobs</dt><dd><span class="mono">gpu_memory_utilization</span> (×HBM budget), <span class="mono">max_model_len</span> (caps one request's KV appetite), <span class="mono">max_num_seqs</span> (concurrency cap). Effective concurrency = min(max_num_seqs, KV-block-budget ÷ blocks-per-seq).</dd></div>
+    </dl>
+
+    <h3>Worked numbers</h3>
+    <div class="math"><span class="lbl">Per-token KV, Llama-3-70B (GQA)</span>2 × 80 × 8 × 128 × 2 B = 327,680 B ≈ <span class="hl">0.32 MB/tok</span>. 8k ctx → ~2.5 GiB/seq. MHA-equiv (64 KV heads) → 2.62 MB/tok, 8× worse. Llama-3-8B → 128 KB/tok.</div>
+    <div class="math"><span class="lbl">MLA vs MHA (DeepSeek-V3)</span>~576 values/tok × 61 layers × 2 B ≈ 69 KiB/tok, vs ~4.0 MB/tok MHA-equiv → <span class="hl">~55–60× smaller</span>. How a 671B/37B-active model serves long context.</div>
+    <div class="math"><span class="lbl">KV-limited concurrency</span>2×H100 (160 GB) @ util 0.9 = 144 GB − 70 GB FP8 weights − overhead ≈ 64 GB for KV. ÷ 0.32 MB/tok ≈ 200k token-slots ÷ 8k ctx ≈ <span class="hl">~25 concurrent</span>. FP8 KV → ~50. Binding constraint is KV, not weights.</div>
+
+    <h3>Gotchas</h3>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"KV is 2 × n_layers × n_heads × head_dim …"</p><p class="why">Use <b>n_kv_heads</b>. On any GQA/MQA model, query heads overcount by the group factor (8× for Llama-3-70B, up to 64× for MQA) — the single most common 8×/64× error.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"The model is FP8, so the KV cache is FP8 too."</p><p class="why">KV dtype is <b>independent</b> of weight dtype. You can run BF16 weights + FP8 KV or vice versa. At long context KV — not weights — is the binding constraint, and only KV quant addresses it.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Set gpu_memory_utilization to 0.98 to grab more KV."</p><p class="why">CUDA graphs, NCCL buffers, activation spikes, and fragmentation live <em>outside</em> vLLM's KV accounting — pushing to 0.95–0.98 OOMs under load despite the arithmetic "fitting." 0.90 is the default for a reason.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"TPOT is constant across a generation."</p><p class="why">It <b>grows with sequence length</b> — each decode step also reads the KV cache, which grows every token. Late tokens are measurably slower than early ones; long-context TPOT SLOs are the hardest to hold. Also: TP degree is capped by n_kv_heads (GQA=8 → TP&gt;8 replicates KV).</p></div>
+
+    <h3>Rehearsed answers</h3>
+    <details class="qa"><summary>Write the KV formula and size Llama-3-70B on 2×H100 (FP8 weights): how many concurrent 8k requests?</summary><div class="ans"><p class="qa-q">Model answer</p><p>KV = 2 × n_layers × n_kv_heads × head_dim × bytes × seq_len × batch. Per token: 2×80×8×128×2 = 327,680 B ≈ 0.32 MB (FP16). On 2×H100 = 160 GB, util 0.9 → 144 GB usable; FP8 weights ≈ 70 GB, ~10 GB overhead → ~64 GB for KV. 64 GB ÷ 0.32 MB ≈ 200k token-slots; ÷ 8k ≈ ~25 concurrent. FP8 KV (0.16 MB/tok) ≈ doubles it to ~50. The binding constraint is KV capacity, so KV precision and context length are my throughput levers here — not the weights.</p></div></details>
+    <details class="qa"><summary>Compare MHA, MQA, GQA, MLA.</summary><div class="ans"><p class="qa-q">Model answer</p><p>MHA caches one KV head per query head — maximal (GPT-3 ≈ 4.5 MB/tok). MQA collapses to 1 KV head → reduction = n_heads (up to 64×) but hurts quality/stability. GQA groups query heads → reduction n_heads/G; Llama-3-70B is 8× at near-MHA quality — the default. MLA caches a low-rank latent + small RoPE key, decoupling KV from head count → ~50× vs MHA, beating GQA, at the cost of up-projection compute and custom kernels. Progression: MHA → GQA (quality-preserving standard) → MLA (aggressive architectural compression).</p></div></details>
+    <details class="qa"><summary>A team wants 128k context on a model that "fits on one GPU." What breaks?</summary><div class="ans"><p class="qa-q">Model answer</p><p>KV breaks it. Even with GQA, 70B at 0.32 MB/tok × 131,072 ≈ 41 GB for a <em>single</em> request — half an H100, on top of weights — so batch collapses to ~1 and it may not fit. Options, in order: prefer a GQA/MLA model; quantize KV to FP8/INT8; quantize weights to free HBM; add GPUs via TP/PP to pool HBM (respecting the n_kv_heads divisibility limit); prefix caching if a long preamble is shared; KV offload to CPU/NVMe for cold portions (ideally NVLink-C2C like GH200/GB200, not PCIe); and architectural help like sliding-window attention. I'd compute the KV budget explicitly first, then combine KV-quant + weight-quant + TP, reserving offload for idle multi-turn sessions, not the decode hot path.</p></div></details>
+  </section>
+
+  <!-- ===================== MODULE 3 ===================== -->
+  <section id="m3" class="module">
+    <div class="mod-head"><span class="mod-num">03</span><h2>Quantization</h2></div>
+    <p class="mod-lede">Numeric formats, weight-only vs weight+activation, GPTQ/AWQ/GGUF/SmoothQuant, FP8/FP4, KV quant, and the accuracy tradeoffs — anchored on the fact that decode is bandwidth-bound.</p>
+
+    <p class="eyebrow">Framing</p>
+    <p>Quantization stores weights (and sometimes activations and KV) in fewer bits, trading a little accuracy for large savings in VRAM and — the win that matters — memory bandwidth. Because decode reads every weight per token, halving bytes/weight ~doubles decode throughput even though the math is unchanged. The recurring hard problem underneath every serious activation-quant method is <em>activation outliers</em>.</p>
+
+    <h3>Key terms</h3>
+    <dl class="gloss">
+      <div><dt>Bytes per weight</dt><dd>FP32=4, FP16/BF16=2, FP8/INT8=1, INT4/FP4=0.5 — <em>before</em> scale overhead. Effective: INT4-g128 ≈ 4.25 bpw, MXFP4 4.25, NVFP4 4.5, GGUF Q4_K_M ~4.8, Q8_0 ~8.5. Never forget the scale bits.</dd></div>
+      <div><dt>Weight-only (WxA16) vs Weight+Activation (WxAx)</dt><dd>Weight-only (GPTQ, AWQ, GGUF, NF4) dequantizes to FP16 for the matmul → saves memory/bandwidth, helps decode, little/no prefill win. W+A (SmoothQuant W8A8, FP8, NVFP4) runs a native low-precision GEMM → also speeds compute-bound prefill; harder because of activation outliers.</dd></div>
+      <div><dt>GPTQ</dt><dd>One-shot PTQ minimizing layer <em>output</em> error using approximate Hessian info from calibration data, compensating not-yet-quantized weights as it goes. Weight-only INT4, group-wise; calibration-sensitive.</dd></div>
+      <div><dt>AWQ</dt><dd>Protects the ~0.1–1% salient channels (chosen by <em>activation</em> magnitude) via per-channel scaling before a simple INT4 round. No backprop, robust on instruction-tuned models, often beats GPTQ on chat.</dd></div>
+      <div><dt>SmoothQuant</dt><dd>Migrates activation-outlier difficulty into the weights via a per-channel factor (Y=(X/s)(sW)), making INT8 activations tractable → unlocks W8A8. On Ada/Hopper, native <b>FP8 W8A8 has largely superseded it</b> (FP's range absorbs outliers without the trick).</dd></div>
+      <div><dt>GGUF k-quants</dt><dd>llama.cpp block schemes (superblocks of 256, hierarchical scales). Q4_K_M ≈ 4.8 bpw with sensitive tensors bumped to 6-bit — the community size/quality sweet spot.</dd></div>
+      <div><dt>FP8 / FP4 / MXFP4 / NVFP4</dt><dd>FP8: E4M3 (max ~448, forward) / E5M2 (max ~57344, gradients), native on <b>Ada/Hopper/Blackwell</b>. FP4/E2M1 always block-scaled: MXFP4 = 32 values + 8-bit power-of-two scale (4.25 bpw); NVFP4 = 16 values + FP8 scale + per-tensor FP32 (~4.5 bpw, more accurate). FP4 native <em>math</em> is <b>Blackwell-only</b>.</dd></div>
+      <div><dt>Activation outliers</dt><dd>Past ~6.7B params, systematic channels 10–100× the rest, recurring in the same dims. Barely affect weight quant; destroy per-tensor activation quant. Fixes: keep them FP16 (LLM.int8()), migrate to weights (SmoothQuant), or rotate them away (QuaRot/SpinQuant → makes W4A4 viable).</dd></div>
+    </dl>
+
+    <h3>Worked numbers</h3>
+    <div class="math"><span class="lbl">Effective bpw (never forget scales)</span>INT4-g128 = (128·4 + 16 + 16)/128 = <span class="hl">4.25 bpw</span>. MXFP4 = (32·4 + 8)/32 = 4.25. NVFP4 = (16·4 + 8)/16 = 4.5. So "4-bit" ≈ 0.53–0.6 B/weight, not 0.5.</div>
+    <div class="math"><span class="lbl">Does 70B fit on one 80GB H100?</span>FP16 140 GB → no (need TP≥2). FP8 70 GB → weights fit, ~5–8 GB left for KV → tiny batch. INT4 ~37 GB → ~40 GB free for KV → comfortable single-GPU serving. This is the canonical "why quantize to serve on one GPU."</div>
+    <div class="math"><span class="lbl">Accuracy deltas to quote</span>INT8 ≈ lossless (&lt;0.1 PPL, &lt;1 pt MMLU). Good INT4-g128 (AWQ/GPTQ) ~0.1–0.5 PPL, small eval drop — worse on GSM8K/HumanEval/long-context. W4A4 without rotations ≫ harder than W4A16. PPL can look fine while task evals regress.</div>
+
+    <h3>Gotchas</h3>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Quantization makes the model faster across the board."</p><p class="why">It speeds bandwidth-bound <b>decode</b> (~linear in bytes saved). Weight-only quant gives little/no <b>prefill</b> speedup and can be slightly slower (dequant overhead). Prefill only accelerates with native low-precision matmul (FP8 Ada/Hopper, FP4 Blackwell).</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Weight-only INT4 gives a flat 4× decode speedup."</p><p class="why">It's <b>kernel-conditional</b> — you need a fused dequant-GEMM (Marlin, Machete, AWQ-GEMM, ExLlamaV2). A naive kernel that dequantizes to an FP16 buffer in HBM pays FP16 bandwidth + dequant cost, and the win evaporates.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"INT4 is roughly lossless like INT8."</p><p class="why">INT8 is near-lossless; INT4 usually holds PPL but drops measurably on math/code/long-context/reasoning and on small models. Check <b>task evals</b>, not just perplexity.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"W4A4 is just W4A16 plus activations, same difficulty."</p><p class="why">Activation outliers wreck low-bit activations — W4A4 needs rotations (QuaRot/SpinQuant) or FP formats and is far harder. In real W8A8/FP8, activations use <b>per-token dynamic</b> scaling while weights use per-channel static — static activation scales break on out-of-distribution prompts.</p></div>
+
+    <h3>Rehearsed answers</h3>
+    <details class="qa"><summary>Why does INT4 speed up token generation but barely help prefill?</summary><div class="ans"><p class="qa-q">Model answer</p><p>Different roofline regimes. Decode at modest batch is memory-bandwidth-bound: each token streams every weight from HBM, so time ≈ model_bytes ÷ bandwidth. Cutting bytes ~4× scales throughput up — the cheaper arithmetic is irrelevant because the ALUs were idle. Prefill is a big compute-bound GEMM; weight-only INT4 dequantizes back to FP16 to run it, so you do the same FP16 FLOPs plus dequant overhead — no speedup, sometimes a small loss. To accelerate prefill you quantize activations too and use a native low-precision GEMM: INT8 (SmoothQuant), FP8 on Ada/Hopper (~2× BF16), or FP4/NVFP4 on Blackwell.</p></div></details>
+    <details class="qa"><summary>Compare GPTQ, AWQ, SmoothQuant.</summary><div class="ans"><p class="qa-q">Model answer</p><p>GPTQ and AWQ are weight-only INT4 PTQ for memory/bandwidth (decode) wins; SmoothQuant is W8A8 for compute speedups. GPTQ minimizes layer output error with approximate Hessian info, compensating remaining weights — excellent accuracy, calibration-sensitive. AWQ protects the ~1% salient channels (by activation magnitude) via per-channel scaling — no backprop, robust on chat models. SmoothQuant migrates activation-outlier difficulty into weights so INT8 activations become quantizable, unlocking INT8 GEMM that speeds prefill/high-batch. In practice: AWQ/GPTQ INT4 for latency-bound decode and single-GPU fit; FP8 (or SmoothQuant on pre-Ada hardware) when compute-bound and chasing prefill/throughput.</p></div></details>
+    <details class="qa"><summary>Their INT4 model has the same perplexity as FP16 but users say it's "dumber." Why?</summary><div class="ans"><p class="qa-q">Model answer</p><p>Perplexity is a weak, averaged proxy dominated by easy high-frequency tokens, so it can stay flat while capabilities that depend on rare precise computations regress — exactly math (GSM8K), code (HumanEval), long-context, and multi-step reasoning, which users notice. INT4 damage concentrates there and smaller models feel it more. I'd stop trusting PPL, run task evals (esp. CoT math/code and long-context retrieval), verify they used group-wise scales and a proper method (AWQ/GPTQ) not naive RTN, check the KV/activations weren't also dropped to 4-bit (W4A4 without rotations is much worse), and consider bumping sensitive tensors (like Q4_K_M) or moving to FP8/INT8 where the cost is near zero.</p></div></details>
+  </section>
+
+  <!-- ===================== MODULE 4 ===================== -->
+  <section id="m4" class="module">
+    <div class="mod-head"><span class="mod-num">04</span><h2>GPU sizing &amp; hardware</h2></div>
+    <p class="mod-lede">VRAM budget math, the roofline in practice, the GPU lineup, interconnect, and the sizing recipe — plus the diagnosis of which bound you're actually in.</p>
+
+    <p class="eyebrow">Two questions, always</p>
+    <p><b>Does it fit?</b> — a VRAM budget: <span class="mono">weights + KV + activations + overhead</span>. <b>How fast?</b> — split by phase: prefill compute-bound, decode ≈ <span class="mono">bandwidth ÷ bytes_read_per_token</span>. Then classify: capacity-bound, bandwidth-bound, or compute-bound, and act accordingly.</p>
+
+    <h3>Key terms</h3>
+    <dl class="gloss">
+      <div><dt>VRAM budget</dt><dd>Weights (fixed: params × bytes) + KV (variable: scales with concurrent tokens) + activations (small at inference, a few hundred MB–couple GB) + CUDA/framework overhead (a real 1–3 GB). In vLLM: util × VRAM − weights − profiled reserve → paged KV pool.</dd></div>
+      <div><dt>Ridge point</dt><dd>peak_FLOPS ÷ bandwidth — where you flip memory→compute-bound. H100 BF16 ≈ 295 FLOP/byte; FP8 ≈ 590. Decode (~1–2) is deep in bandwidth territory; batched prefill is on the compute roof.</dd></div>
+      <div><dt>MBU / MFU</dt><dd>Model Bandwidth Utilization (decode efficiency, ~60–80% achievable) and Model FLOPs Utilization (prefill/training, ~40–60%). Report decode against MBU, prefill against MFU — and apply the haircut consistently.</dd></div>
+      <div><dt>NVLink / NVSwitch vs PCIe</dt><dd>NVLink4 (H100) ~900 GB/s bidir/GPU via NVSwitch; NVLink5 (B200) ~1.8 TB/s. PCIe Gen5 x16 ~64 GB/s/dir. Like-for-like ~7×. TP's per-layer all-reduce needs NVLink → intra-node; PP tolerates PCIe/cross-node.</dd></div>
+      <div><dt>Capacity / bandwidth / compute-bound</dt><dd>The three sizing regimes and their fixes: OOM/can't-batch → quantize, add GPUs, shrink KV; decode below the compute roof → batch, quantize, higher-BW GPU; prefill saturating TFLOPS → more/faster tensor cores, lower-precision matmul.</dd></div>
+    </dl>
+
+    <h3>Worked numbers</h3>
+    <div class="math"><span class="lbl">Decode floor with TP (the corrected version)</span>70B FP16 = 140 GB → doesn't fit one 80 GB H100 → TP≥2. On 2×H100 each streams ~70 GB ÷ 3.35 TB/s ≈ 21 ms → <span class="hl">~48 tok/s</span> single-stream (not 24). H200 single-card 141 GB: 140 ÷ 4.8 TB/s ≈ 34 tok/s but ~1 GB left for KV. Real ≈ 60–80% of these.</div>
+    <div class="math"><span class="lbl">Sizing recipe</span>(1) weight footprint ÷ per-GPU capacity → TP floor. (2) reserve KV for batch×context, confirm it fits or add GPUs. (3) TP = smallest divisor of n_kv_heads that fits, within one NVLink node. (4) too big for a node → add PP. (5) scale throughput by replicating the TP group (DP). Keep <span class="hl">TP ≤ n_kv_heads</span>.</div>
+    <div class="math"><span class="lbl">gpt-oss-120b (MoE, MXFP4)</span>~117B × ~0.53 B ≈ 62 GB → one 80 GB H100/H200. Decode bandwidth tracks ~5.1B <em>active</em> → per-token weight bytes ≈ 2.7 GB → hundreds of tok/s single-stream. Memory set by total, speed by active.</div>
+
+    <h3>Gotchas</h3>
+    <div class="gotcha fix"><span class="tag">Precision fix</span><p class="claim">TP is only a "make it fit" tool.</p><p class="why">TP <b>aggregates HBM bandwidth</b>, so it's a decode-latency lever too — you'd use 2 GPUs for a model that fits on 1 to hit an ITL SLO. Cost is an all-reduce per layer (needs NVLink; diminishing returns past a node).</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"70B FP16 fits on 2×80 GB, done."</p><p class="why">140 GB weights leave only ~20 GB for KV + overhead across the pair → ~60k KV tokens → a handful of long-context requests. People quote the weight-only fit and OOM under real concurrency.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"H200 is faster than H100."</p><p class="why">Same compute die. H200's win is 141 GB and ~4.8 TB/s — it helps decode (bandwidth) and capacity, <b>not</b> prefill FLOPS. For compute-bound work, look at B200 or more H100s.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Set TP=16 on a model with 8 KV heads."</p><p class="why">Attention heads must shard evenly; you can't cleanly split 8 KV heads across 16 GPUs → forces replication and wastes memory. And don't mix bits/bytes — INT4 is 0.5 B/param, not 4.</p></div>
+
+    <h3>Rehearsed answers</h3>
+    <details class="qa"><summary>Size GPUs for Llama-3-70B at 8k context, 32 concurrent requests.</summary><div class="ans"><p class="qa-q">Model answer</p><p>Weights: 140 GB FP16 → TP≥2, but check KV. KV/token = 2×80×8×128×2 = 0.32 MB; 8k request ≈ 2.5 GiB; 32 → ~80 GB of KV. Total ≈ 140 + 80 + ~3 overhead ≈ 223 GB &gt; 160 GB (2×80), so TP=4 (320 GB) on one NVLink node, or go FP8 (70 GB weights) on TP=2 which leaves ~85 GB for KV — plenty. Keep TP dividing the 8 KV heads, scale throughput with DP replicas behind a load balancer. On H200s, FP8 weights fit one card but 80 GB of KV forces ≥2.</p></div></details>
+    <details class="qa"><summary>When H200 over H100, and when is neither right?</summary><div class="ans"><p class="qa-q">Model answer</p><p>H200 shares H100's die but has 141 GB @ ~4.8 TB/s. Pick it when capacity-bound (bigger model/KV/batch on fewer GPUs, avoiding TP) or bandwidth-bound at decode (~43% more bandwidth ≈ near-linear decode speedup). It does <em>not</em> help compute-bound prefill (identical TFLOPS) — there I'd look at Blackwell B200 (FP4, ~8 TB/s, 192 GB) or more H100s. For small/prefill/vision that fit in 48 GB, an L40S can be more cost-effective despite low bandwidth; for tiny/edge, L4.</p></div></details>
+    <details class="qa"><summary>How do you tell if you're capacity-, bandwidth-, or compute-bound?</summary><div class="ans"><p class="qa-q">Model answer</p><p>Sweep batch size. If throughput scales ~linearly, you're bandwidth-bound → keep batching, quantize, or move to higher-BW HBM. If it flattens, you've hit compute or run out of KV. Capacity-bound shows as OOM / can't raise batch → quantize, add GPUs (TP intra-node, PP across), shrink KV (GQA/KV-quant/shorter context). Compute-bound: large-batch or long-prefill saturates TFLOPS and higher precision hurts → more/faster tensor cores or a faster low-precision matmul. On the roofline, compare your kernel's arithmetic intensity to the ridge point (~295 for H100 BF16).</p></div></details>
+  </section>
+
+  <!-- ===================== MODULE 5 ===================== -->
+  <section id="m5" class="module">
+    <div class="mod-head"><span class="mod-num">05</span><h2>Latency &amp; throughput engineering</h2></div>
+    <p class="mod-lede">TTFT, TPOT/ITL, the throughput–latency tradeoff, goodput, SLO-driven batching, Little's law — and why you optimize goodput, never raw throughput.</p>
+
+    <h3>Key terms</h3>
+    <dl class="gloss">
+      <div><dt>TTFT</dt><dd>Time-to-first-token = queueing + prefill over the whole prompt. Scales with input length and load. The "responsiveness" metric.</dd></div>
+      <div><dt>TPOT / ITL</dt><dd>Time-per-output-token / inter-token latency = the decode cadence, bandwidth-bound. Typical SLO 20–50 ms. ITL has its own p50/p99 distribution; batching causes jitter even when mean TPOT is fine.</dd></div>
+      <div><dt>End-to-end latency</dt><dd>≈ TTFT + (output_len − 1) × TPOT. For long outputs the TPOT term dominates (a 500-token answer at 40 ms ≈ 20 s of decode vs 0.5 s TTFT).</dd></div>
+      <div><dt>Goodput</dt><dd>Throughput counting only requests that <em>meet their SLOs</em>. The correct optimization target — a server can post huge raw tokens/s while goodput is zero because every request violates the TPOT SLO.</dd></div>
+      <div><dt>Little's Law</dt><dd>Concurrency L = arrival_rate λ × latency W. Ties SLO, batch size, and VRAM together: 50 req/s × 4 s = 200 in-flight → 200 KV slots. Or: 128 KV-limited slots ÷ 4 s = 32 req/s max before the queue diverges.</dd></div>
+      <div><dt>Saturation / queueing cliff</dt><dd>Queue wait ~ ρ/(1−ρ): at ρ=0.9 ≈ 9× service time, ρ=0.99 ≈ 99×. TTFT tails diverge before throughput maxes — run at ~70–85%, not 99%.</dd></div>
+    </dl>
+
+    <h3>Worked numbers</h3>
+    <div class="math"><span class="lbl">Goodput vs throughput</span>Batch 64 → 8000 tok/s but p95 TPOT 90 ms (SLO 50) → goodput = <span class="hl">0</span>. Batch 24 → 5000 tok/s, p95 TPOT 45 ms → goodput = 5000. The 8000 is real and useless for an interactive SLO.</div>
+    <div class="math"><span class="lbl">Little's Law sizing</span>Target 100 req/s, per-replica SLO-compliant point sustains ~20 req/s → 5 replicas + ~25% headroom → 6–7. Cross-check: 20 req/s × 4 s = 80 concurrent, must fit in KV.</div>
+
+    <h3>Gotchas</h3>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Optimize/report raw throughput."</p><p class="why">Report <b>goodput</b>. A batch-64 config can post huge tok/s while violating the TPOT SLO for every request. Capacity plans on raw throughput over-promise and miss SLOs in prod.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Load-test closed-loop (fixed concurrency)."</p><p class="why">Closed-loop self-throttles and hides the queueing cliff. Use <b>open-loop Poisson</b> arrivals at a rising rate; the rate just before p95 breaks is your goodput ceiling.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Benchmark at 128-in/128-out, extrapolate."</p><p class="why">Capacity is dominated by the input/output length <em>distribution</em> (prefill cost ~ input, decode + KV occupancy ~ output). Wrong distribution mispredicts VRAM, concurrency, and RPS by multiples. And report p95/p99 — batching inflates tails faster than means.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"p99 ITL is spiky but p50 is fine — must be the network."</p><p class="why">Almost always <b>prefill/decode interference</b>: a long prompt's prefill shares an iteration with decodes, delaying everyone's tokens. Fix with chunked prefill (bound prefill tokens/step) or P/D disaggregation.</p></div>
+
+    <h3>Rehearsed answers</h3>
+    <details class="qa"><summary>Why do TTFT and TPOT have different bottlenecks, and how do you improve each?</summary><div class="ans"><p class="qa-q">Model answer</p><p>TTFT is prefill + queueing — compute-bound, scales with input length and FLOPs, so FP8/FP4 matmul, TP for more FLOPs, chunked-prefill tuning, fewer queued requests, and prefix caching all help. TPOT is decode — one token per pass re-reading all weights from HBM, so at low batch it's bandwidth-bound with floor ≈ model_bytes ÷ bandwidth; improve it with weight quantization, higher-bandwidth HBM (H200/B200), a smaller model, TP (aggregates bandwidth), or — at the throughput level — more batching. They respond to opposite levers (compute for TTFT, bandwidth for TPOT), which is why you sometimes physically disaggregate them.</p></div></details>
+    <details class="qa"><summary>Size a deployment for p95 TTFT &lt; 500 ms, p95 TPOT &lt; 50 ms at 100 req/s.</summary><div class="ans"><p class="qa-q">Model answer</p><p>Fix SLOs, characterize the input/output distribution, then micro-benchmark one replica open-loop: sweep arrival rate, plot p95 TTFT/TPOT and tok/s vs concurrency, find the max concurrency C* meeting both SLOs and the RPS there. Say 20 req/s/replica → 5 replicas + ~20–30% headroom → 6–7. Cross-check with Little's Law (concurrency = RPS × latency) and verify C* sequences' KV + weights fit in VRAM — for decode-heavy loads KV, not FLOPs, is the binding constraint. Validate end-to-end on the real length distribution and confirm p99 ITL survives long-prompt interference (enable chunked prefill if not).</p></div></details>
+    <details class="qa"><summary>State Little's Law and use it.</summary><div class="ans"><p class="qa-q">Model answer</p><p>Concurrency L = λ × W. Forward: 50 req/s × 4 s = 200 concurrent sequences → sets max_num_seqs and, via per-seq KV, my VRAM budget; if 200 KV slots don't fit, that rate is infeasible on one replica regardless of compute. Backward: 128 KV-limited slots ÷ 4 s = 32 req/s max — above that the queue grows unbounded and TTFT diverges. It's the invariant tying SLO, batch, and memory, and a sanity check on any capacity number.</p></div></details>
+  </section>
+
+  <!-- ===================== MODULE 6 ===================== -->
+  <section id="m6" class="module">
+    <div class="mod-head"><span class="mod-num">06</span><h2>Cost modeling &amp; build-vs-buy</h2></div>
+    <p class="mod-lede">$/token, utilization, reserved/on-demand/spot, the open-weight vs API crossover, and on-prem vs cloud — where cost per token is a property of your <em>deployment</em>, not the model.</p>
+
+    <div class="callout-strong"><b>Master identity:</b> <span class="mono">cost/1M = GPU_$per_hr ÷ (tok/s × 3600 ÷ 1e6)</span>. GPU price is linear in the numerator; achieved throughput sits in the denominator and swings 10–20× between naive and well-batched serving. Utilization dominates — an answer that starts "the H100 costs X so tokens cost Y" is wrong until you nail batched throughput.</div>
+
+    <h3>Key terms</h3>
+    <dl class="gloss">
+      <div><dt>Reserved / on-demand / spot</dt><dd>On-demand: priciest/hr, pay only for what you run — spiky load. Reserved (1–3 yr, ~30–60% off): take-or-pay, right for a steady baseline. Spot (~60–90% off): reclaimable — batch/offline or overflow with an on-demand fallback. Layer them.</dd></div>
+      <div><dt>Break-even utilization</dt><dd>Sustained utilization where amortized on-prem TCO/GPU-hr = cloud rental — commonly ~50–70% for owned vs on-demand. Below it, rent.</dd></div>
+      <div><dt>TCO (fully-loaded)</dt><dd>Beyond GPU-hours: MLOps/platform team, 24/7 on-call, redundancy (N+1), eval/quality harness, networking/storage/egress, power/cooling (PUE), and model-update churn. For small teams these swamp per-token savings — the naive comparison overstates self-hosting by 2–5×.</dd></div>
+      <div><dt>Blended rate</dt><dd>A single $/1M from an assumed input:output mix — meaningless without the mix. RAG (input-heavy) vs agentic (output-heavy) differ ~3× at fixed rates, and output ≈ 3–5× input.</dd></div>
+    </dl>
+
+    <h3>Worked numbers</h3>
+    <div class="math"><span class="lbl">Cost identity, corrected</span>$16/hr node @ 3000 tok/s → 3000×3600 = 10.8M tok/hr → <span class="hl">~$1.48/1M</span>. Better point: $2.50/hr @ 2000 tok/s → ~$0.35/1M; drop to 400 tok/s → ~$1.74/1M. A 5× swing from utilization on identical hardware.</div>
+    <div class="math"><span class="lbl">On-prem break-even</span>8×H100 node ~$300k capex ÷ 3 yr + power/cooling + ops ≈ $200k/yr → $/GPU-hr = 200,000 ÷ (8 × 8760 × U). U=1.0 → $2.85; U=0.7 → $4.07; U=0.3 → $9.51. Owning wins only above ~60–70% sustained U.</div>
+    <div class="math"><span class="lbl">Power</span>B200 ~1000 W × PUE 1.5 = 1.5 kW wall → 13,140 kWh/yr → ~$1,314/GPU/yr @ $0.10/kWh. A 100 kW GB200 rack ≈ ~$88k/yr in power alone.</div>
+
+    <h3>Gotchas</h3>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Compute $/token from single-stream (batch-1) throughput."</p><p class="why">Overstates cost 5–20×. Serving economics live in batching/utilization; an interviewer will immediately ask "at what batch size?" Quoting batch-1 signals you've never run a server.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Reserved is always cheaper — the hourly rate is lower."</p><p class="why">Take-or-pay: below break-even utilization you pay for idle capacity and it's <b>more</b> expensive than on-demand. Match commitment to a predictable baseline; peaks/spiky load belong on on-demand/spot — and spot capacity for current GPUs often <b>isn't available</b> when you want it.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Open-weight models are free."</p><p class="why">Weights are free; serving isn't — compute, ops, redundancy, eng time, plus licensing terms. A "free model" at 20% GPU utilization can cost more per token than a frontier API.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Batch × single-stream = aggregate throughput, indefinitely."</p><p class="why">Only below the roofline's <b>critical batch size</b> (where arithmetic intensity crosses the FLOP:byte ratio). Past that decode is compute-bound and adding sequences buys latency, not throughput — and TP/multi-GPU adds comms overhead, so 8 GPUs give well under 8×.</p></div>
+
+    <h3>Rehearsed answers</h3>
+    <details class="qa"><summary>When does self-hosting an open-weight model beat a per-token API?</summary><div class="ans"><p class="qa-q">Model answer</p><p>It's a utilization bet. Self-hosting wins with high, steady, batchable volume on a task an open-weight model matches — you keep GPUs busy at large batch and drive $/token well below API rates (often 3–10×). It loses when volume is low or spiky (you provision for peak, pay for idle silicon), when the team is small (MLOps/on-call/redundancy/eval TCO swamps savings), or when you need frontier quality. It also loses to the API's zero-ops and hardware-risk transfer (obsolescence, lead times) when privacy/latency aren't issues. Mature answer: hybrid — self-host the steady, batchable, privacy-sensitive baseline; API for the hard-quality tail and bursts; route by difficulty; re-decide as prices/volume/quality move.</p></div></details>
+    <details class="qa"><summary>Why do providers charge more for output than input tokens, and how much?</summary><div class="ans"><p class="qa-q">Model answer</p><p>Prefill (input) is compute-bound, high FLOP utilization, and amortizes across the batch — cheap per token. Decode (output) is memory-bandwidth-bound: every output token streams the whole model's weights from HBM, far less efficient. So output is priced ~3–5× input (Claude ~5×, GPT-4o ~4×). The internal cost-to-serve ratio can be larger and workload-dependent, but the priced multiple is 3–5×. It's why I model input and output separately and why my workload's input:output ratio (RAG vs agentic) swings the bill several-fold at fixed rates.</p></div></details>
+    <details class="qa"><summary>On-prem vs cloud for inference?</summary><div class="ans"><p class="qa-q">Model answer</p><p>Capex-vs-opex governed by break-even utilization. Compute on-prem all-in annual cost — amortized capex (3–4 yr) + power/cooling (apply PUE) + space + allocated ops — ÷ (GPU-hours × sustained utilization) for an effective $/GPU-hr, and compare to on-demand and reserved. On-prem usually wins only above ~60–70% sustained utilization; below that idle owned silicon loses to cloud. Also weigh what capex can't flex: multi-month lead times, depreciation/obsolescence (a generation can 2–3× throughput/watt and strand hardware), power/cooling capex (a GB200 rack is 100 kW+), and redundancy you own but rarely use. Default hybrid: own the steady baseline where high utilization is real; cloud reserved for a predictable floor, on-demand for peaks, spot for interruptible batch.</p></div></details>
+  </section>
+
+  <!-- ===================== MODULE 7 ===================== -->
+  <section id="m7" class="module">
+    <div class="mod-head"><span class="mod-num">07</span><h2>Productionization tradeoffs</h2></div>
+    <p class="mod-lede">The model/quant/GPU tradeoff triangle, MoE, multi-adapter LoRA, long-context, autoscaling &amp; cold starts, and the eval discipline that catches silent quality loss on a quant or engine swap.</p>
+
+    <h3>Key terms</h3>
+    <dl class="gloss">
+      <div><dt>Tradeoff triangle (really a tetrahedron)</dt><dd>Quality vs latency (TTFT/ITL) vs throughput/cost vs hardware footprint (GPU count/VRAM) are mutually constraining. Quantization, batch size, and GPU count are the levers. The senior answer names the axis it's trading.</dd></div>
+      <div><dt>MoE: total vs active params</dt><dd>Total = VRAM you must hold (all experts resident). Active = FLOPs + decode bandwidth per token. gpt-oss-120b: ~117B total / ~5.1B active. As batch grows, tokens route to more experts, so effective weight-read rises — MoE throughput scaling is lumpier than dense, and hot-expert imbalance hurts.</dd></div>
+      <div><dt>Multi-adapter LoRA (S-LoRA)</dt><dd>Base loaded once; tiny adapters (rank 8–64, tens of MB) paged in/out; a mixed batch computes base x·W once, then adds each request's x·Aᵢ·Bᵢ via grouped GEMM. One deployment serves thousands of fine-tunes. Keep adapters <b>unmerged</b> (merging bakes in one and kills multi-tenancy).</dd></div>
+      <div><dt>Long-context walls</dt><dd>(1) KV grows linearly (128k ≈ 40 GB/seq for a 70B GQA → batch collapses). (2) Prefill attention is O(N²) → huge TTFT + head-of-line blocking. (3) Position extrapolation via RoPE scaling (linear/NTK/YaRN) degrades ("lost in the middle") if pushed too far. FlashAttention keeps attention memory O(N); compute is still O(N²).</dd></div>
+      <div><dt>Structured / constrained decoding</dt><dd>Grammar/JSON-schema FSM masks invalid-token logits each step (XGrammar/Outlines) → guaranteed valid JSON/tool calls. Compile &amp; cache the grammar or per-step overhead bites; over-constraining can lower answer quality.</dd></div>
+      <div><dt>Cold start</dt><dd>Time to bring a replica live: provision → pull image → load weights into VRAM → warm CUDA graphs. Tens of seconds to minutes for large models — so scale-to-zero is impractical; keep a warm floor.</dd></div>
+    </dl>
+
+    <h3>Worked numbers</h3>
+    <div class="math"><span class="lbl">MoE decoupling</span>gpt-oss-120b ~5.1B active → decode FLOPs ≈ 2×5.1e9 ≈ 1.0e10/tok (computes like a ~5B dense) but must hold ~62 GB (MXFP4). DeepSeek-V3: <span class="hl">671B total ≈ ~671 GB FP8</span> (multi-node) / ~37B active.</div>
+    <div class="math"><span class="lbl">Spec-decode expected speedup</span>k=4, per-token accept p=0.7 → (1−0.7⁵)/0.3 ≈ 2.8 tokens/target-pass → ~1.5–2.5× realistic at low batch after overhead; → ~1× or worse as batch saturates compute.</div>
+
+    <h3>Gotchas</h3>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Autoscale GPU replicas on GPU-utilization %."</p><p class="why">A bandwidth/KV-saturated decode server can show modest "util." Scale on <b>queue depth, KV-cache utilization, running batch size, or TTFT/ITL SLOs</b>. Wrong metric → scale late (p99 collapses) or needlessly (burn money). And design for cold starts (warm floor, weights on NVMe) — assuming instant GPU scaling like CPU services is wrong by 10–100× on time-to-ready.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"temp=0 gives identical outputs across engines/GPUs/quant."</p><p class="why">Greedy isn't bit-reproducible across kernels, batch sizes, GPU gens, or precisions (reduction order, FP8/FP4 numerics). A quant/engine swap can change outputs even at temp 0 — so <b>eval quality, don't assume equivalence</b>; silent regressions hide here.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"A 128k window means good 128k quality."</p><p class="why">Advertised windows lean on RoPE scaling and degrade in the middle and on recall well before the max — and each long request needs tens of GB of KV, collapsing throughput. Window size ≠ effective usable context ≠ free.</p></div>
+    <div class="gotcha"><span class="tag"><span class="tri"></span>Gotcha</span><p class="claim">"Perplexity is fine, so the quantization is safe to ship."</p><p class="why">PPL can hold while instruction-following, tool-call format adherence, code/math, and long-context recall degrade. Gate on task-specific evals + LLM-as-judge win-rate vs the incumbent, via shadow then canary with auto-rollback.</p></div>
+
+    <h3>Rehearsed answers</h3>
+    <details class="qa"><summary>Serve 500 customer fine-tunes of one 13B base. How?</summary><div class="ans"><p class="qa-q">Model answer</p><p>Not 500 replicas — multi-adapter LoRA (S-LoRA). Fine-tune each as a rank-~16 adapter (tens of MB vs a ~26 GB BF16 base). Load the base once, keep hot adapters in GPU and page cold ones from host RAM/NVMe; for a mixed batch compute base x·W once, then add each request's low-rank x·Aᵢ·Bᵢ via grouped/segmented GEMM so throughput stays near base-only. Keep adapters unmerged (merging bakes in one and kills multi-tenancy). Watch adapter-swap latency, a small per-token low-rank overhead, and a max-concurrent-adapters cap set by memory. Route by adapter-id; accept a cold-load penalty for rare-traffic tenants.</p></div></details>
+    <details class="qa"><summary>After BF16→FP8, offline scores are flat but users report worse answers. Investigate?</summary><div class="ans"><p class="qa-q">Model answer</p><p>Don't trust flat aggregates/PPL — FP8 changes numerics and can degrade specific capabilities (long-context recall, code/math, strict format/tool-call adherence) while averages hold. Build a task-specific golden eval mirroring real traffic, add LLM-as-judge win-rate of FP8 vs the BF16 incumbent, slice by prompt length/task/structured-output validity. Check determinism/format drift (temp-0 outputs differ across kernels; tokenizer/chat-template mismatches). Reproduce user reports as test cases. Prevent recurrence: gate every quant/engine/model change on this suite, roll out shadow → canary with SLO/quality-based auto-rollback, monitor structured-output failure rate. If FP8 regresses on key slices, keep BF16 there or try FP8 weights + higher-precision KV/attention. Quantization is a quality change, eval-gated, never assumed lossless.</p></div></details>
+    <details class="qa"><summary>Why does one 128k request wreck throughput for everyone, and what do you do?</summary><div class="ans"><p class="qa-q">Model answer</p><p>Two mechanisms. KV: ~0.32 MB/tok × 131,072 ≈ 40 GB for that one sequence — half an H100 — starving the KV pool the batch depends on. Prefill blocking: prefilling 128k tokens is a long O(N²) compute burst that head-of-line-blocks everyone's decode, spiking ITL. Fixes: chunked prefill (interleave prefill chunks with others' decode); PagedAttention + prefix caching; FP8 KV to halve footprint; route very-long-context to a dedicated pool so it doesn't contend with interactive chat; enforce per-tier context/max-token limits. Long context is a shared-resource problem — isolate it or interleave it, don't let one request monopolize KV and the prefill pipeline.</p></div></details>
+  </section>
+
+  <!-- ===================== CLOSER ===================== -->
+  <section id="closer" class="module">
+    <div class="mod-head"><span class="mod-num">✓</span><h2>The 60-second whiteboard script</h2></div>
+    <p class="mod-lede">If they hand you a marker and say "size this," walk this path out loud. It shows the reasoning, not just an answer.</p>
+    <div class="panel">
+      <ul class="clean">
+        <li><b>1 · State the axis.</b> "What am I optimizing — TTFT, TPOT, or throughput/$? — because prefill and decode pull opposite ways."</li>
+        <li><b>2 · Weights.</b> params × bytes/weight → GPU-count floor. (70B: 140/70/37 GB at FP16/FP8/INT4.)</li>
+        <li><b>3 · KV budget.</b> 2·layers·kv_heads·head_dim·bytes → per-token; × context × concurrency. This, not weights, usually binds. Confirm it fits or add GPUs (TP ≤ n_kv_heads, intra-node NVLink).</li>
+        <li><b>4 · Decode floor.</b> bandwidth ÷ bytes_read_per_token, × MBU (~60–80%). Remember TP aggregates bandwidth. Batch to raise aggregate throughput until the critical batch size or KV runs out.</li>
+        <li><b>5 · Prefill / TTFT.</b> ~2·params·N ÷ (achievable TFLOPS), + O(N²) at long context.</li>
+        <li><b>6 · Cost.</b> $/1M = GPU_$/hr ÷ (tok/s × 3600 ÷ 1e6). Say "utilization dominates."</li>
+        <li><b>7 · Meet the SLO.</b> Size on measured goodput at the p95 TTFT/TPOT targets (open-loop load test), add ~25% headroom, scale with DP replicas — never on peak FLOPs.</li>
+      </ul>
+    </div>
+    <p class="callout-strong"><b>And the one-liner to close on:</b> "Serving is a batching game bounded by memory — decode is bandwidth-bound and KV-limited, so my levers are quantization, GQA/KV-quant, tensor parallelism for bandwidth, and continuous batching for utilization; I size on goodput at the SLO, not peak throughput."</p>
+
+    <p class="foot">Built as a study aid from a fact-checked teaching pass across serving engines, KV-cache, quantization, GPU sizing, latency/throughput, cost, and productionization. Figures are approximate and version/config-dependent (GPU specs current to early 2026) — verify against your target hardware and the model card before quoting them as fact. Your DataHouse sizing figures drop straight into formulas 1–5 and the §00 recipe; share them and they become worked examples.</p>
+  </section>
+
+</main>
+</div>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  function cur(){try{return localStorage.getItem('lsik-theme')}catch(e){return null}}
+  function sys(){return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
+  function apply(t){if(t==='dark'||t==='light'){root.setAttribute('data-theme',t)}else{root.removeAttribute('data-theme')}}
+  var saved=cur(); if(saved){apply(saved)}
+  function eff(){return root.getAttribute('data-theme')||sys()}
+  if(btn){btn.addEventListener('click',function(){var n=eff()==='dark'?'light':'dark';apply(n);try{localStorage.setItem('lsik-theme',n)}catch(e){}});}
+})();
+</script>
