@@ -1,0 +1,294 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Serving, Explained Simply</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+
+<style>
+  :root{
+    --bg:#f6f4ee;
+    --surface:#ffffff;
+    --surface-2:#f1efe7;
+    --ink:#232830;
+    --ink-soft:#3c434e;
+    --muted:#6b7280;
+    --faint:#9aa0a8;
+    --line:#e6e2d7;
+    --line-strong:#d8d3c5;
+    --accent:#0f7a63;
+    --accent-deep:#0a5847;
+    --accent-soft:#e3f1ec;
+    --plain:#7a5cc0;          /* "in plain words" violet */
+    --plain-bg:#efeafa;
+    --plain-line:#d9cef2;
+    --warn:#a8620a;
+    --warn-bg:#fbf0dc;
+    --warn-line:#ecc78a;
+    --shadow:0 1px 2px rgba(35,40,48,.05),0 10px 30px rgba(35,40,48,.06);
+    --radius:16px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#14161b;
+      --surface:#1c1f26;
+      --surface-2:#191c22;
+      --ink:#ecedf0;
+      --ink-soft:#ccd0d7;
+      --muted:#9aa1ac;
+      --faint:#6d7480;
+      --line:#2a2e37;
+      --line-strong:#363b45;
+      --accent:#4fc7a8;
+      --accent-deep:#8fe0cc;
+      --accent-soft:#123029;
+      --plain:#b8a6ec;
+      --plain-bg:#221d33;
+      --plain-line:#3d3357;
+      --warn:#e7ad5e;
+      --warn-bg:#241c0f;
+      --warn-line:#4d3c1d;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 34px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14161b;--surface:#1c1f26;--surface-2:#191c22;--ink:#ecedf0;--ink-soft:#ccd0d7;
+    --muted:#9aa1ac;--faint:#6d7480;--line:#2a2e37;--line-strong:#363b45;--accent:#4fc7a8;
+    --accent-deep:#8fe0cc;--accent-soft:#123029;--plain:#b8a6ec;--plain-bg:#221d33;--plain-line:#3d3357;
+    --warn:#e7ad5e;--warn-bg:#241c0f;--warn-line:#4d3c1d;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 34px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Hanken Grotesk","Segoe UI",system-ui,sans-serif;
+    font-size:18px;line-height:1.68;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:0 22px}
+  h1,h2,h3{font-family:"Fraunces","Georgia",serif;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+  a{color:var(--accent)}
+
+  .toolbar{display:flex;justify-content:flex-end;padding-top:18px}
+  .toggle{font-size:14px;background:var(--surface);color:var(--muted);border:1px solid var(--line-strong);
+    border-radius:100px;padding:6px 14px;cursor:pointer;font-family:inherit}
+  .toggle:hover{color:var(--ink);border-color:var(--accent)}
+
+  header.hero{padding:14px 0 8px}
+  .eyebrow{font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+  h1{font-size:clamp(2.1rem,6vw,3.2rem);line-height:1.06;margin:0 0 20px}
+  .sub{font-size:clamp(1.1rem,2.4vw,1.32rem);color:var(--ink-soft);line-height:1.5;margin:0 0 8px}
+  .sub b{color:var(--ink);font-weight:600}
+
+  .partline{display:flex;align-items:center;gap:14px;margin:64px 0 8px}
+  .partline .n{font-family:"Fraunces",serif;font-weight:600;font-size:15px;color:var(--surface);
+    background:var(--accent);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;flex:none}
+  .partline h2{font-size:clamp(1.5rem,3.4vw,1.95rem);margin:0}
+  .part-sub{color:var(--muted);font-size:16px;margin:0 0 8px 48px}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:26px 28px;margin:22px 0;box-shadow:var(--shadow)}
+  .card h3{font-size:1.35rem;margin:0 0 4px;line-height:1.2}
+  .tinytag{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:0 0 14px}
+
+  /* the "comment": in plain words */
+  .plain{background:var(--plain-bg);border:1px solid var(--plain-line);border-radius:12px;
+    padding:14px 16px;margin:0 0 16px}
+  .plain .lab{display:block;font-size:12.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--plain);margin-bottom:5px}
+  .plain p{margin:0;color:var(--ink-soft);font-size:17px}
+  .plain .big{font-size:17.5px;color:var(--ink)}
+
+  .card p{margin:0 0 12px;color:var(--ink-soft)}
+  .card p:last-child{margin-bottom:0}
+  .card strong{color:var(--ink);font-weight:600}
+
+  .watch{border-left:3px solid var(--warn);background:var(--warn-bg);border-radius:0 10px 10px 0;
+    padding:12px 16px;margin:16px 0 4px}
+  .watch .lab{font-weight:700;color:var(--warn);font-size:14px;margin-right:6px}
+  .watch span.body{color:var(--ink-soft);font-size:16px}
+
+  .say{margin-top:14px;font-size:16px;color:var(--muted)}
+  .say b{color:var(--accent-deep);font-weight:600}
+  .say .q{color:var(--ink-soft);font-style:italic}
+
+  /* the 3 big ideas cards */
+  .bigidea{background:var(--accent-soft);border:1px solid var(--plain-line);border-color:var(--line-strong);
+    border-radius:var(--radius);padding:22px 24px;margin:16px 0}
+  .bigidea .num{font-family:"Fraunces",serif;font-size:14px;font-weight:600;color:var(--accent);letter-spacing:.05em}
+  .bigidea h3{font-family:"Fraunces",serif;font-size:1.3rem;margin:4px 0 8px;color:var(--ink)}
+  .bigidea p{margin:0;color:var(--ink-soft);font-size:17px}
+
+  .remember{background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);padding:24px 28px;margin:26px 0}
+  .remember h3{font-size:1.35rem;margin:0 0 10px}
+  .remember ol{margin:0;padding-left:22px}
+  .remember li{margin:10px 0;color:var(--ink-soft)}
+  .remember li b{color:var(--ink)}
+
+  .foot{margin:70px 0 90px;padding-top:22px;border-top:1px solid var(--line);color:var(--faint);font-size:14.5px}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+</style>
+
+<div class="wrap">
+  <div class="toolbar"><button class="toggle" id="themeBtn" type="button">◐ theme</button></div>
+
+  <header class="hero">
+    <p class="eyebrow">LLM Serving — the friendly version</p>
+    <h1>How LLMs are actually run, in plain English.</h1>
+    <p class="sub">Serving a model is really just two jobs: <b>reading the question</b>, then <b>writing the answer one word at a time</b>. Almost every interview question is about making that second job faster and cheaper. Each idea below starts with a <b>plain-words note</b> (the analogy), then the real thing, then the one mistake to avoid.</p>
+    <p class="sub" style="font-size:1rem;color:var(--muted);margin-top:14px">Take it slowly, top to bottom. You don't need the numbers memorized — you need the pictures in your head.</p>
+  </header>
+
+  <!-- ============ PART 1 ============ -->
+  <div class="partline"><span class="n">1</span><h2>The 3 ideas everything rests on</h2></div>
+  <p class="part-sub">Get these three and the rest is just details hanging off them.</p>
+
+  <div class="bigidea">
+    <span class="num">IDEA 1</span>
+    <h3>There are two phases: reading, then writing</h3>
+    <p>When you send a prompt, the model first <strong>reads the whole thing at once</strong> (fast) — this is called <strong>prefill</strong>. Then it <strong>writes the reply one word at a time</strong> (slower) — this is called <strong>decode</strong>. The wait before the first word appears is prefill; the speed the words stream out is decode.</p>
+  </div>
+
+  <div class="bigidea">
+    <span class="num">IDEA 2</span>
+    <h3>Writing is slow because of memory, not math</h3>
+    <p>To write <strong>each single word</strong>, the GPU has to read the <strong>entire model</strong> out of its memory. The math is quick; the slow part is hauling all those numbers across. So the thing that limits writing speed is <strong>memory speed (bandwidth)</strong>, not how many calculations the chip can do.</p>
+  </div>
+
+  <div class="bigidea">
+    <span class="num">IDEA 3</span>
+    <h3>The "notepad" (KV cache) is what really fills up the GPU</h3>
+    <p>As the model works, it keeps a <strong>notepad of everything said so far</strong> so it doesn't re-read the whole conversation each time. This notepad is the <strong>KV cache</strong>. It grows with longer conversations and with more users at once — and it usually runs out of room <strong>before</strong> the model itself does.</p>
+  </div>
+
+  <!-- ============ PART 2 ============ -->
+  <div class="partline"><span class="n">2</span><h2>The core concepts</h2></div>
+  <p class="part-sub">Same pattern each time: the plain-words note first, then what's really going on.</p>
+
+  <div class="card">
+    <p class="tinytag">Concept</p>
+    <h3>Prefill vs. decode</h3>
+    <div class="plain"><span class="lab">💬 In plain words</span><p class="big">Prefill is <b>skimming the whole question in one glance</b>. Decode is <b>writing the answer word by word — and re-reading your entire textbook before every word.</b></p></div>
+    <p>They stress the computer differently. Prefill does a lot of math all at once, so it's limited by <strong>raw compute power</strong>. Decode does tiny amounts of math but constantly re-reads the model, so it's limited by <strong>memory speed</strong>. That's why the two need different fixes.</p>
+    <div class="watch"><span class="lab">⚠ Watch out:</span><span class="body">Don't say "make the chip do more math" to speed up writing. Writing is waiting on memory, not math.</span></div>
+  </div>
+
+  <div class="card">
+    <p class="tinytag">Concept</p>
+    <h3>Memory-bandwidth-bound (the big one)</h3>
+    <div class="plain"><span class="lab">💬 In plain words</span><p class="big">It's not that the chef cooks slowly. It's that they <b>run to the pantry and carry every ingredient back for each single bite.</b> The trip is the bottleneck.</p></div>
+    <p>Because the GPU re-reads the whole model for every word, faster writing comes from <strong>moving fewer bytes</strong> (a smaller model — see quantization) or a GPU with <strong>faster memory</strong> — not from a chip with more math power.</p>
+    <div class="watch"><span class="lab">⚠ Watch out:</span><span class="body">A GPU with huge "TFLOPS" (math power) but the same memory speed barely helps writing. Look at <strong>memory bandwidth (TB/s)</strong> first.</span></div>
+    <p class="say"><b>Say this:</b> <span class="q">"Decode is memory-bandwidth-bound, so I'd optimize bandwidth and batching before compute."</span></p>
+  </div>
+
+  <div class="card">
+    <p class="tinytag">Concept</p>
+    <h3>Batching (and why vLLM exists)</h3>
+    <div class="plain"><span class="lab">💬 In plain words</span><p class="big">A <b>bus, not a taxi.</b> One trip across town (one read of the model) can carry many passengers (many users' words) at once.</p></div>
+    <p>Since reading the model is the expensive part, you serve <strong>many users on the same read</strong>. That's <strong>batching</strong>, and it's the single biggest way to get more out of a GPU. <strong>vLLM</strong> is the popular free software that does this well — it lets users hop on and off the "bus" continuously instead of waiting for it to fill up (<strong>continuous batching</strong>).</p>
+    <div class="watch"><span class="lab">⚠ Watch out:</span><span class="body">Bigger batches serve more people but make <strong>each person wait a little longer</strong>. It's a trade-off, not a free win.</span></div>
+  </div>
+
+  <div class="card">
+    <p class="tinytag">Concept</p>
+    <h3>The KV cache (the notepad)</h3>
+    <div class="plain"><span class="lab">💬 In plain words</span><p class="big">A <b>running notepad of the conversation.</b> Instead of re-reading everything said so far, the model jots down notes and glances at them.</p></div>
+    <p>The notepad grows with <strong>every word and every extra user</strong>. Long chats and many users make it balloon — and it, not the model's size, is usually what fills the GPU's memory. So "how many people can I serve at once?" is really "how much notepad room is left?"</p>
+    <div class="watch"><span class="lab">⚠ Watch out:</span><span class="body">"The model fits in the GPU" isn't enough. Ask: <strong>how much room is left for the notepad?</strong> That's what caps how many users you serve.</span></div>
+  </div>
+
+  <div class="card">
+    <p class="tinytag">Concept</p>
+    <h3>Quantization (shrinking the model)</h3>
+    <div class="plain"><span class="lab">💬 In plain words</span><p class="big"><b>Rounding $19.99 to $20.</b> You store each number with fewer digits — the model gets much smaller, and mostly just as good.</p></div>
+    <p>Models are made of billions of numbers. Storing them with fewer bits (16-bit → 8-bit → 4-bit) roughly <strong>halves, then quarters</strong> the size. Because writing is limited by how much you haul from memory, a smaller model <strong>writes faster</strong> — and it may now fit on <strong>one GPU instead of two</strong>.</p>
+    <div class="watch"><span class="lab">⚠ Watch out:</span><span class="body">Shrinking too far (4-bit) can quietly hurt quality on hard tasks like math and code — even if the model "looks" fine. Always test real tasks, not just a single score.</span></div>
+    <p class="say"><b>Say this:</b> <span class="q">"Quantization mainly speeds up writing and saves memory; it doesn't magically make everything faster."</span></p>
+  </div>
+
+  <div class="card">
+    <p class="tinytag">Concept</p>
+    <h3>Picking a GPU: "does it fit" + "how fast"</h3>
+    <div class="plain"><span class="lab">💬 In plain words</span><p class="big">Two questions, like renting a truck: <b>Is the cargo bay big enough</b> (memory), and <b>how fast can it drive</b> (bandwidth)?</p></div>
+    <p>Rough rule for "does it fit": a model with <strong>70 billion</strong> numbers needs about <strong>140 GB</strong> at full size — that's two big GPUs. Shrink it (quantize) to ~70 GB and it fits one; to ~35 GB and it fits one comfortably with notepad room. For "how fast," compare <strong>memory bandwidth</strong>, not the math-power number.</p>
+    <div class="watch"><span class="lab">⚠ Watch out:</span><span class="body">The newer H200 isn't a "faster brain" than the H100 — it just has <strong>more memory and faster memory</strong>. Great for writing and for fitting more, not for raw math.</span></div>
+  </div>
+
+  <div class="card">
+    <p class="tinytag">Concept</p>
+    <h3>Splitting a model across GPUs</h3>
+    <div class="plain"><span class="lab">💬 In plain words</span><p class="big"><b>Two people carrying one big load.</b> Split the model over two GPUs and each hauls half — so each word is written faster, not just "it now fits."</p></div>
+    <p>When a model is too big for one GPU, you spread it across several (<strong>tensor parallelism</strong>). A nice bonus: because each GPU now reads only its half from memory, writing gets <strong>faster too</strong> — not merely possible. This only works if the GPUs are joined by a very fast link (<strong>NVLink</strong>), so it's done <strong>inside one machine</strong>.</p>
+    <div class="watch"><span class="lab">⚠ Watch out:</span><span class="body">Splitting a model across separate machines over a normal network is slow — the GPUs spend all their time talking. Keep the split inside one box.</span></div>
+  </div>
+
+  <!-- ============ PART 3 ============ -->
+  <div class="partline"><span class="n">3</span><h2>Making it fast &amp; affordable</h2></div>
+  <p class="part-sub">The business side — speed promises and money.</p>
+
+  <div class="card">
+    <p class="tinytag">Concept</p>
+    <h3>Speed for one vs. total served (and "goodput")</h3>
+    <div class="plain"><span class="lab">💬 In plain words</span><p class="big">A <b>highway.</b> Add more cars and the road carries more people total — but everyone drives a bit slower. Pack it too tight and it jams.</p></div>
+    <p>Two different things: how fast <strong>one</strong> person gets their answer (latency) vs. how many people you serve <strong>total</strong> (throughput). Bigger batches raise the total but slow each person. The number that actually matters is <strong>goodput</strong>: how many people you serve <strong>while still hitting your speed promise</strong>.</p>
+    <div class="watch"><span class="lab">⚠ Watch out:</span><span class="body">A huge "tokens per second" number is meaningless if every user is now too slow. Always tie throughput to a speed promise.</span></div>
+    <p class="say"><b>Two words to know:</b> <span class="q">time-to-first-word</span> (the initial wait) and <span class="q">time-per-word</span> (how fast it then streams).</p>
+  </div>
+
+  <div class="card">
+    <p class="tinytag">Concept</p>
+    <h3>Cost per answer</h3>
+    <div class="plain"><span class="lab">💬 In plain words</span><p class="big">You <b>rent the GPU by the hour</b> whether it's busy or idle. Cost per answer is just: rental price ÷ how much work you squeezed out that hour.</p></div>
+    <p>So the price of the GPU matters far less than <strong>keeping it busy</strong>. A well-batched server can be <strong>10× cheaper per answer</strong> than a poorly-used one on the exact same hardware. When people quote a cost per million tokens, the hidden question is always "at what usage level?"</p>
+    <div class="watch"><span class="lab">⚠ Watch out:</span><span class="body">Never estimate cost from <strong>one</strong> user at a time — that overstates it wildly. Real cost assumes the GPU is packed with users (batched).</span></div>
+    <p class="say"><b>The formula, plainly:</b> <span class="q">cost per million words = (GPU price per hour) ÷ (words per second × 3,600) × 1,000,000.</span> Rounded: a busy $16/hr server doing 3,000 words/sec is about <b>$1.50 per million words</b>.</p>
+  </div>
+
+  <div class="card">
+    <p class="tinytag">Concept</p>
+    <h3>Run your own vs. pay per use (open vs. API)</h3>
+    <div class="plain"><span class="lab">💬 In plain words</span><p class="big"><b>Buying a car vs. taking taxis.</b> Owning is cheaper if you drive a lot and steadily; taxis win if your trips are rare or unpredictable.</p></div>
+    <p><strong>Run your own</strong> (a free "open-weight" model like Llama, Gemma, or gpt-oss on your GPUs): cheaper <strong>if</strong> you have steady, heavy traffic — plus you keep your data private and control everything. <strong>Pay per use</strong> (an API like Claude, GPT, Gemini): no setup, best quality, and cheaper when traffic is light or spiky — you don't pay for idle GPUs.</p>
+    <div class="watch"><span class="lab">⚠ Watch out:</span><span class="body">"Open models are free" — the weights are; <strong>running them isn't</strong> (GPUs, engineers, on-call, backups). For a small team, the API often wins until traffic is large and steady.</span></div>
+  </div>
+
+  <!-- ============ PART 4 ============ -->
+  <div class="partline"><span class="n">4</span><h2>The traps (what people get wrong)</h2></div>
+  <p class="part-sub">If you remember nothing else, remember not to say these.</p>
+
+  <div class="card">
+    <p class="tinytag">Quick corrections</p>
+    <div class="watch"><span class="lab">⚠</span><span class="body"><strong>"Writing is limited by the chip's math power."</strong> No — it's limited by memory speed. This is the #1 thing interviewers listen for.</span></div>
+    <div class="watch"><span class="lab">⚠</span><span class="body"><strong>"The model fits, so we're fine."</strong> The <em>notepad</em> (KV cache) usually fills up first. Check the leftover room.</span></div>
+    <div class="watch"><span class="lab">⚠</span><span class="body"><strong>"Quantizing makes everything faster."</strong> It mainly speeds <em>writing</em> and saves memory; it barely helps the <em>reading</em> phase.</span></div>
+    <div class="watch"><span class="lab">⚠</span><span class="body"><strong>"Look at the big TFLOPS number to pick a GPU."</strong> For writing-heavy work, look at <em>memory bandwidth</em> first.</span></div>
+    <div class="watch"><span class="lab">⚠</span><span class="body"><strong>"Cost per answer from one user."</strong> Always assume the GPU is packed with users; otherwise you're off by 10×.</span></div>
+    <div class="watch"><span class="lab">⚠</span><span class="body"><strong>"A 4-bit model is basically 0.5 bytes per number."</strong> Close, but it's a touch more (~0.53) once you count the little "scale" values — and shrinking weights doesn't shrink the notepad.</span></div>
+  </div>
+
+  <!-- ============ REMEMBER ============ -->
+  <div class="remember">
+    <h3>If you only remember 5 things</h3>
+    <ol>
+      <li><b>Two phases:</b> reading the prompt (prefill), then writing word-by-word (decode).</li>
+      <li><b>Writing is slow because of memory speed</b>, not math — so speed it up with a smaller model, faster memory, or batching.</li>
+      <li><b>The notepad (KV cache) fills the GPU</b> and caps how many users you serve.</li>
+      <li><b>Batching = a bus.</b> It's how you make serving cheap; the cost is a little extra wait per person.</li>
+      <li><b>Cost is about keeping the GPU busy</b>, not the sticker price. Own vs. API is "car vs. taxi."</li>
+    </ol>
+  </div>
+
+  <p class="foot">This is the plain-English companion to the detailed "LLM Serving Interview Kit" — same facts, fewer numbers, more pictures. When you're comfortable here, the detailed version adds the exact formulas, GPU specs, and the full set of interview answers. Numbers here are rounded on purpose.</p>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  function cur(){try{return localStorage.getItem('lsimple-theme')}catch(e){return null}}
+  function sys(){return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
+  function apply(t){if(t==='dark'||t==='light'){root.setAttribute('data-theme',t)}else{root.removeAttribute('data-theme')}}
+  var saved=cur(); if(saved){apply(saved)}
+  function eff(){return root.getAttribute('data-theme')||sys()}
+  if(btn){btn.addEventListener('click',function(){var n=eff()==='dark'?'light':'dark';apply(n);try{localStorage.setItem('lsimple-theme',n)}catch(e){}});}
+})();
+</script>
