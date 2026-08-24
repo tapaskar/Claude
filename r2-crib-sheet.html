@@ -1,0 +1,269 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The R2 Crib Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --bg:#f2f3f7; --surface:#ffffff; --surface-2:#f6f7fa;
+    --ink:#141a26; --ink-soft:#333d4f; --muted:#5c6980; --faint:#8a95a9;
+    --line:#dcdfe8; --line-strong:#c6ccd9;
+    --accent:#3448c5; --accent-deep:#1f2c8a; --accent-soft:#e9ecfb;
+    --warn:#a05a08; --warn-bg:#fbf1de;
+    --good:#0e7b60; --good-bg:#e2f4ee;
+    --shadow:0 1px 2px rgba(20,26,38,.06),0 8px 26px rgba(20,26,38,.07);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0d1117; --surface:#151b25; --surface-2:#111722;
+      --ink:#e9edf5; --ink-soft:#c8d0dd; --muted:#94a0b4; --faint:#69758a;
+      --line:#242d3c; --line-strong:#33405a;
+      --accent:#7d8ff2; --accent-deep:#b3bdf8; --accent-soft:#1b2140;
+      --warn:#eab365; --warn-bg:#231a0d;
+      --good:#3fc9a6; --good-bg:#0e221d;
+      --shadow:0 1px 2px rgba(0,0,0,.45),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0d1117; --surface:#151b25; --surface-2:#111722;
+    --ink:#e9edf5; --ink-soft:#c8d0dd; --muted:#94a0b4; --faint:#69758a;
+    --line:#242d3c; --line-strong:#33405a;
+    --accent:#7d8ff2; --accent-deep:#b3bdf8; --accent-soft:#1b2140;
+    --warn:#eab365; --warn-bg:#231a0d;
+    --good:#3fc9a6; --good-bg:#0e221d;
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .mono,code{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px 70px}
+  .toolbar{display:flex;justify-content:flex-end;padding-top:14px}
+  .toggle{font-family:"IBM Plex Mono",monospace;font-size:11px;background:var(--surface);color:var(--muted);
+    border:1px solid var(--line-strong);border-radius:100px;padding:5px 12px;cursor:pointer}
+  header{padding:8px 0 4px}
+  .kicker{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin:0 0 8px}
+  h1{font-size:clamp(1.7rem,4vw,2.3rem);line-height:1.06;letter-spacing:-.02em;margin:0 0 8px;font-weight:700}
+  .sub{color:var(--muted);font-size:15px;margin:0 0 6px;max-width:64ch}
+
+  h2{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);margin:30px 0 10px;font-weight:600;border-top:1px solid var(--line);padding-top:18px}
+  h2:first-of-type{border-top:0;padding-top:0}
+
+  .open{background:var(--accent-soft);border:1px solid var(--line-strong);border-left:4px solid var(--accent);
+    border-radius:0 10px 10px 0;padding:14px 18px;font-size:15.5px;color:var(--ink);max-width:76ch}
+  .open i{color:var(--ink-soft)}
+
+  figure{margin:14px 0 6px;padding:0}
+  figure svg{max-width:100%;height:auto;display:block;color:var(--ink-soft)}
+  figcaption{font-size:13px;color:var(--muted);margin-top:8px;max-width:74ch}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:700px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 18px;box-shadow:var(--shadow)}
+  .card h3{font-size:13px;font-family:"IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 10px;font-weight:600}
+  .card ul{margin:0;padding-left:18px}
+  .card li{margin:5px 0;color:var(--ink-soft);font-size:14.5px}
+  .card li b{color:var(--ink)}
+  .card li .n{font-family:"IBM Plex Mono",monospace;color:var(--accent-deep);font-weight:600}
+
+  .math{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0;
+    font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.6;color:var(--ink-soft);overflow-x:auto}
+  .math b{color:var(--ink)} .math .hl{color:var(--accent-deep);font-weight:600}
+
+  ol.script{margin:8px 0;padding-left:20px;max-width:76ch}
+  ol.script li{margin:5px 0;color:var(--ink-soft);font-size:14.5px}
+  ol.script b{color:var(--ink)}
+
+  .ladder{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+  .rung{font-family:"IBM Plex Mono",monospace;font-size:12px;border:1px solid var(--line-strong);
+    border-radius:7px;padding:6px 10px;background:var(--surface);color:var(--ink-soft)}
+  .rung.hot{border-color:var(--accent);color:var(--accent-deep);background:var(--accent-soft);font-weight:600}
+  .arrowc{color:var(--faint);font-size:14px}
+
+  .sent{border-left:3px solid var(--good);background:var(--good-bg);border-radius:0 8px 8px 0;
+    padding:10px 14px;margin:8px 0;max-width:78ch;font-size:14.5px;color:var(--ink-soft)}
+  .sent b{color:var(--good)}
+
+  .foot{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+  @media print{
+    .toolbar{display:none} body{background:#fff;color:#111;font-size:12px}
+    .card,.math{box-shadow:none} h2{margin-top:18px;padding-top:10px}
+  }
+</style>
+
+<div class="wrap">
+  <div class="toolbar"><button class="toggle" id="themeBtn" type="button">&#9680; theme</button></div>
+
+  <header>
+    <p class="kicker">Round 2 &middot; system design &middot; one page</p>
+    <h1>The R2 Crib Sheet</h1>
+    <p class="sub">The autonomous network ops assistant &mdash; the figure, the formulas, and every number worth saying out loud. Read in ten minutes; redraw the figure in two. Mock-interview fixes are baked in.</p>
+  </header>
+
+  <h2>Say first &mdash; the framing sentence</h2>
+  <div class="open">&ldquo;An ops assistant isn&rsquo;t one big brain &mdash; it&rsquo;s an agent inside a closed loop: <i>awareness &rarr; analysis &rarr; decision &rarr; execution</i>, with feedback. The LLM lives at the slow, human-facing altitude; sub-second control stays algorithmic. And the center of gravity is the <b>safety envelope</b> between the agent and the network.&rdquo;</div>
+
+  <h2>The figure &mdash; memorize &amp; redraw</h2>
+  <figure>
+    <svg viewBox="0 0 880 540" role="img" aria-label="Network data feeds an LLM agent via live tools and indexed RAG; proposed actions pass through a safety envelope of confidence gate, blast-radius tier, dry-run, execute, verify, rollback; a human approves above; telemetry closes the loop.">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+        <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+        </marker>
+      </defs>
+      <rect x="240" y="12" width="400" height="48" rx="9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+      <text x="440" y="32" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">NOC engineer</text>
+      <text x="440" y="48" text-anchor="middle" font-size="11" fill="currentColor" opacity=".75">approve &middot; steer &middot; break-glass</text>
+
+      <rect x="304" y="180" width="272" height="66" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8"/>
+      <text x="440" y="207" text-anchor="middle" font-size="13" font-weight="600" fill="var(--accent)">LLM agent</text>
+      <text x="440" y="225" text-anchor="middle" font-size="11" fill="var(--accent)">plan &middot; correlate &middot; draft RCA + fix</text>
+
+      <line x1="410" y1="180" x2="410" y2="64" stroke="currentColor" stroke-width="1.3" marker-end="url(#arr)"/>
+      <text x="400" y="126" text-anchor="end" font-size="11" fill="currentColor">proposes, with evidence</text>
+      <line x1="470" y1="64" x2="470" y2="176" stroke="currentColor" stroke-width="1.3" marker-end="url(#arr)"/>
+      <text x="480" y="126" font-size="11" fill="currentColor">approve / veto</text>
+
+      <rect x="40" y="172" width="212" height="86" rx="9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+      <text x="146" y="194" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Live tools (structured)</text>
+      <text x="146" y="212" text-anchor="middle" font-size="10.8" fill="currentColor" opacity=".8">telemetry &middot; KPIs &middot; alarms</text>
+      <text x="146" y="228" text-anchor="middle" font-size="10.8" fill="currentColor" opacity=".8">topology graph &middot; inventory &middot; CR feed</text>
+      <text x="146" y="244" text-anchor="middle" font-size="10.8" fill="currentColor" opacity=".8">queried at answer time</text>
+      <line x1="252" y1="212" x2="300" y2="212" stroke="currentColor" stroke-width="1.3" marker-end="url(#arr)"/>
+      <text x="276" y="203" text-anchor="middle" font-size="10.5" fill="currentColor">tool calls</text>
+
+      <rect x="628" y="172" width="212" height="86" rx="9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+      <text x="734" y="194" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">RAG (unstructured)</text>
+      <text x="734" y="212" text-anchor="middle" font-size="10.8" fill="currentColor" opacity=".8">runbooks/MOPs &middot; past incidents</text>
+      <text x="734" y="228" text-anchor="middle" font-size="10.8" fill="currentColor" opacity=".8">vendor docs &mdash; hybrid + rerank</text>
+      <text x="734" y="244" text-anchor="middle" font-size="10.8" fill="currentColor" opacity=".8">every claim cited</text>
+      <line x1="628" y1="212" x2="580" y2="212" stroke="currentColor" stroke-width="1.3" marker-end="url(#arr)"/>
+      <text x="604" y="203" text-anchor="middle" font-size="10.5" fill="currentColor">retrieves</text>
+
+      <rect x="120" y="306" width="640" height="92" rx="10" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="7 5"/>
+      <text x="440" y="327" text-anchor="middle" font-size="12" font-weight="600" fill="var(--accent)">SAFETY ENVELOPE</text>
+      <text x="148" y="354" font-size="11" fill="currentColor">confidence gate</text>
+      <line x1="244" y1="350" x2="262" y2="350" stroke="currentColor" stroke-width="1.1" marker-end="url(#arr)"/>
+      <text x="268" y="354" font-size="11" fill="currentColor">blast-radius tier</text>
+      <line x1="374" y1="350" x2="392" y2="350" stroke="currentColor" stroke-width="1.1" marker-end="url(#arr)"/>
+      <text x="398" y="354" font-size="11" fill="currentColor">dry-run / twin</text>
+      <line x1="488" y1="350" x2="506" y2="350" stroke="currentColor" stroke-width="1.1" marker-end="url(#arr)"/>
+      <text x="512" y="354" font-size="11" fill="currentColor">execute MOP</text>
+      <line x1="596" y1="350" x2="614" y2="350" stroke="currentColor" stroke-width="1.1" marker-end="url(#arr)"/>
+      <text x="620" y="354" font-size="11" fill="currentColor">verify KQIs</text>
+      <text x="148" y="382" font-size="11" fill="currentColor" opacity=".85">below gate &rarr; escalate with evidence, never act</text>
+      <text x="620" y="382" font-size="11" fill="currentColor" opacity=".85">fail &rarr; auto-rollback</text>
+
+      <line x1="440" y1="246" x2="440" y2="302" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#arrA)"/>
+      <text x="450" y="278" font-size="11" fill="var(--accent)">approved action</text>
+
+      <rect x="120" y="438" width="640" height="52" rx="9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+      <text x="440" y="459" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Network / OSS</text>
+      <text x="440" y="476" text-anchor="middle" font-size="11" fill="currentColor" opacity=".75">RAN &middot; Core &middot; Transport &mdash; via intent APIs (TMF921) &amp; ticketing, never raw config</text>
+
+      <line x1="440" y1="398" x2="440" y2="434" stroke="currentColor" stroke-width="1.3" marker-end="url(#arr)"/>
+      <path d="M 120 464 L 74 464 L 74 262" fill="none" stroke="currentColor" stroke-width="1.1" marker-end="url(#arr)"/>
+      <text x="68" y="372" text-anchor="end" font-size="11" fill="currentColor" transform="rotate(-90 68 372)">streams telemetry</text>
+    </svg>
+    <figcaption><b>Two kinds of grounding, one envelope, one feedback arrow.</b> Anything that changes faster than a refresh cycle is a live tool (topology, KPIs, CR feed); anything written by humans is indexed RAG with citations. The agent never touches the network directly.</figcaption>
+  </figure>
+
+  <h2>The 40-minute script</h2>
+  <ol class="script">
+    <li><b>Clarify (5)</b> &mdash; the money question: <b>advise or act?</b> Then volumes, users, latency, data quality, residency.</li>
+    <li><b>Skeleton (10)</b> &mdash; draw the figure, narrate left&rarr;right, then the envelope.</li>
+    <li><b>Deep dive (15)</b> &mdash; follow their pick: retrieval, safety, eval, or serving.</li>
+    <li><b>Eval &amp; rollout (5)</b> &mdash; shadow &rarr; suggest &rarr; gated execute. Say it unprompted.</li>
+    <li><b>The trace (5)</b> &mdash; one 3am incident, end to end, plus the low-confidence branch.</li>
+  </ol>
+
+  <h2>Numbers to say out loud</h2>
+  <div class="grid2">
+    <div class="card">
+      <h3>Workload anchor (tier-1 NOC)</h3>
+      <ul>
+        <li><span class="n">~500k</span> alarms/day &rarr; <span class="n">~40k</span> events &rarr; <span class="n">~8k</span> incidents &rarr; <span class="n">~3k</span> human tickets</li>
+        <li><span class="n">~120</span> engineers &middot; <span class="n">~20 min</span> triage &middot; <span class="n">~2 h</span> priority MTTR</li>
+        <li>The LLM sees the <b>compressed</b> stream only &mdash; correlation/dedup stays algorithmic</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Eval gates (the answer I owed the mock)</h3>
+      <ul>
+        <li>Golden set: <span class="n">~200</span> historical incidents with known root cause</li>
+        <li>RCA top-3 accuracy <span class="n">&ge; 80%</span> &middot; citation faithfulness <span class="n">&asymp; 100%</span></li>
+        <li>Engineer acceptance <span class="n">&ge; 60%</span> &middot; kill criterion: <span class="n">&lt; 40%</span> after one quarter &rarr; stop, re-scope</li>
+        <li>Auto-exec gate per MOP&times;scope: <span class="n">6-week</span> shadow, <span class="n">zero</span> incorrect actions</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Serving (volunteer this &mdash; home turf)</h3>
+      <ul>
+        <li>Residency &rarr; self-host open-weight in the operator&rsquo;s VPC; vLLM + <b>prefix caching</b> (shared system prompt)</li>
+        <li>70B weights: <span class="n">140 / 70 / ~37 GB</span> at FP16 / FP8 / 4-bit; or MoE gpt-oss-120b <span class="n">~62 GB</span> on one H100</li>
+        <li>H100 <span class="n">3.35 TB/s</span> &rarr; 70B FP8 on TP2 &asymp; <span class="n">~48 tok/s</span>/stream; copilot SLO: TTFT <span class="n">&lt; 1&ndash;2 s</span>, <span class="n">30&ndash;50 ms</span>/token</li>
+        <li>Batched <span class="n">$0.2&ndash;0.5 / 1M</span> tokens &rarr; an incident (~50k tok) costs <b>&lt; 1&cent;</b> vs 20 engineer-minutes</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>KV / capacity (if they drill)</h3>
+      <ul>
+        <li>KV/token = 2&middot;layers&middot;kv_heads&middot;head_dim&middot;bytes &rarr; 70B GQA &asymp; <span class="n">0.32 MB</span></li>
+        <li>Concurrency = free HBM &divide; (KV/tok &times; context); Little&rsquo;s law: <span class="n">slots = rate &times; latency</span></li>
+        <li>Decode is bandwidth-bound; TP <b>aggregates</b> bandwidth (2 GPUs &asymp; 2&times; decode)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>The five formulas</h2>
+  <div class="math"><b>1&nbsp; weights</b> = params &times; bytes/weight &nbsp;(FP16 2 &middot; FP8 1 &middot; 4-bit ~0.53)&nbsp;&nbsp;&nbsp;<b>2&nbsp; KV/tok</b> = 2 &times; layers &times; kv_heads &times; head_dim &times; bytes</div>
+  <div class="math"><b>3&nbsp; decode tok/s</b> &asymp; HBM bandwidth &divide; bytes-read/token &nbsp;(&times; ~60&ndash;80% real)&nbsp;&nbsp;&nbsp;<b>4&nbsp; concurrency</b> = request rate &times; latency &nbsp;(Little&rsquo;s law)</div>
+  <div class="math"><b>5&nbsp; $/1M tok</b> = GPU $/hr &divide; (tok/s &times; 3600 &divide; 1e6) &nbsp;&rarr;&nbsp; <span class="hl">utilization dominates; never cost from batch-1</span></div>
+
+  <h2>The autonomy ladder &mdash; per procedure &times; per scope</h2>
+  <div class="ladder">
+    <span class="rung">shadow (invisible)</span><span class="arrowc">&rarr;</span>
+    <span class="rung">suggest-only (HITL)</span><span class="arrowc">&rarr;</span>
+    <span class="rung">one-click approve</span><span class="arrowc">&rarr;</span>
+    <span class="rung hot">scoped auto-exec (HOTL)</span>
+  </div>
+  <p class="sub" style="max-width:78ch">Auto-execution is never yes/no per MOP &mdash; it&rsquo;s <b>MOP &times; scope</b>: one cell, this region, off change-freeze, rate-limited (max N/hr). Confidence below the gate &rarr; escalate with the evidence bundle, never act. Every execution: dry-run where a twin exists &rarr; execute &rarr; verify KQIs in a time budget &rarr; auto-rollback on failure. Actions are idempotent desired-state, so retries and rollbacks are safe.</p>
+
+  <h2>The trace &mdash; rehearse until fluid</h2>
+  <ol class="script">
+    <li>Transport link degrades &rarr; <b>alarm fan-out</b> across RAN + Core; correlation compresses the storm.</li>
+    <li>Agent <b>queries topology + KPIs + last night&rsquo;s CRs</b> (tools); <b>retrieves</b> the matching past incident + MOP (cited).</li>
+    <li>&ldquo;Root: fiber degradation on link X, <b>confidence 0.87</b>. 50 site outages converge on one segment &mdash; chain attached. Impact: 3 enterprise slices at SLA risk. Proposed: reroute via Y, <b>tier 2</b>.&rdquo;</li>
+    <li>Tier 2 &rarr; one-click approval &rarr; execute via intent API &rarr; <b>verify KQIs recover</b> &rarr; post the summary to the ticket.</li>
+    <li><b>Counterfactual:</b> at confidence 0.5 it escalates with the evidence bundle instead of acting &mdash; safe degradation is part of the design.</li>
+  </ol>
+
+  <h2>The three sentences that close gaps</h2>
+  <div class="sent"><b>1</b> &mdash; &ldquo;Anything that changes faster than my refresh cycle gets queried live, not embedded &mdash; topology, KPIs, and CR status are tools; runbooks and past tickets are RAG.&rdquo;</div>
+  <div class="sent"><b>2</b> &mdash; &ldquo;Auto-execution is granted per-procedure and per-scope, and the gate is zero incorrect actions in a six-week shadow window plus RCA top-3 above 80%.&rdquo;</div>
+  <div class="sent"><b>3</b> &mdash; &ldquo;Let me walk you through one incident end to end&rdquo; &mdash; then the trace, including the low-confidence branch.</div>
+
+  <p class="foot">Companion to the Four-Round Playbook and the LLM Serving Interview Kit. All figures are representative anchors &mdash; swap in the interviewer&rsquo;s numbers the moment they give you any. Print-friendly.</p>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  function cur(){try{return localStorage.getItem('r2crib-theme')}catch(e){return null}}
+  function sys(){return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
+  function apply(t){if(t==='dark'||t==='light'){root.setAttribute('data-theme',t)}else{root.removeAttribute('data-theme')}}
+  var saved=cur(); if(saved){apply(saved)}
+  function eff(){return root.getAttribute('data-theme')||sys()}
+  if(btn){btn.addEventListener('click',function(){var n=eff()==='dark'?'light':'dark';apply(n);try{localStorage.setItem('r2crib-theme',n)}catch(e){}});}
+})();
+</script>
