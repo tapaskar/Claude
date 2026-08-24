@@ -1,0 +1,400 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Four-Round Playbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root{
+    --bg:#f2f3f7;
+    --surface:#ffffff;
+    --surface-2:#f6f7fa;
+    --ink:#141a26;
+    --ink-soft:#333d4f;
+    --muted:#5c6980;
+    --faint:#8a95a9;
+    --line:#dcdfe8;
+    --line-strong:#c6ccd9;
+    --accent:#3448c5;
+    --accent-deep:#1f2c8a;
+    --accent-soft:#e9ecfb;
+    --warn:#a05a08;
+    --warn-bg:#fbf1de;
+    --warn-line:#eac584;
+    --good:#0e7b60;
+    --good-bg:#e2f4ee;
+    --shadow:0 1px 2px rgba(20,26,38,.06),0 8px 26px rgba(20,26,38,.07);
+    --radius:12px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0d1117;--surface:#151b25;--surface-2:#111722;--ink:#e9edf5;--ink-soft:#c8d0dd;
+      --muted:#94a0b4;--faint:#69758a;--line:#242d3c;--line-strong:#33405a;
+      --accent:#7d8ff2;--accent-deep:#b3bdf8;--accent-soft:#1b2140;
+      --warn:#eab365;--warn-bg:#231a0d;--warn-line:#54401c;
+      --good:#3fc9a6;--good-bg:#0e221d;
+      --shadow:0 1px 2px rgba(0,0,0,.45),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0d1117;--surface:#151b25;--surface-2:#111722;--ink:#e9edf5;--ink-soft:#c8d0dd;
+    --muted:#94a0b4;--faint:#69758a;--line:#242d3c;--line-strong:#33405a;
+    --accent:#7d8ff2;--accent-deep:#b3bdf8;--accent-soft:#1b2140;
+    --warn:#eab365;--warn-bg:#231a0d;--warn-line:#54401c;
+    --good:#3fc9a6;--good-bg:#0e221d;
+    --shadow:0 1px 2px rgba(0,0,0,.45),0 10px 30px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    font-size:16.5px;line-height:1.64;-webkit-font-smoothing:antialiased}
+  .mono,code{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+  code{font-size:.9em}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:860px;margin:0 auto;padding:0 22px 90px}
+
+  .toolbar{display:flex;justify-content:flex-end;padding-top:18px}
+  .toggle{font-family:"IBM Plex Mono",monospace;font-size:12px;background:var(--surface);color:var(--muted);
+    border:1px solid var(--line-strong);border-radius:100px;padding:6px 13px;cursor:pointer}
+  .toggle:hover{color:var(--ink);border-color:var(--accent)}
+
+  header.hero{padding:16px 0 6px}
+  .kicker{font-family:"IBM Plex Mono",monospace;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin:0 0 14px}
+  h1{font-size:clamp(2rem,5vw,3rem);line-height:1.05;letter-spacing:-.02em;margin:0 0 18px;font-weight:700;text-wrap:balance}
+  .lede{font-size:clamp(1.04rem,1.9vw,1.24rem);color:var(--ink-soft);max-width:62ch;line-height:1.55;margin:0}
+
+  section{margin-top:58px;scroll-margin-top:16px}
+  .r-head{display:flex;align-items:center;gap:14px;margin-bottom:4px}
+  .r-num{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;color:var(--surface);
+    background:var(--accent);border-radius:8px;padding:5px 11px;letter-spacing:.06em;flex:none}
+  h2{font-size:clamp(1.45rem,3vw,1.95rem);line-height:1.12;letter-spacing:-.015em;margin:0;font-weight:700;text-wrap:balance}
+  .r-test{margin:10px 0 4px;color:var(--muted);font-size:15.5px}
+  .r-test b{color:var(--ink)}
+  h3{font-size:1.14rem;margin:30px 0 10px;font-weight:600}
+  p{margin:0 0 14px;max-width:70ch;color:var(--ink-soft)}
+  p strong,li strong{color:var(--ink);font-weight:600}
+  ul,ol{margin:10px 0 16px;padding-left:22px;max-width:70ch}
+  li{margin:7px 0;color:var(--ink-soft)}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 24px;box-shadow:var(--shadow);margin:18px 0}
+  .panel h3:first-child{margin-top:0}
+
+  .move{border-left:3px solid var(--good);background:var(--good-bg);border-radius:0 10px 10px 0;
+    padding:12px 16px;margin:16px 0;max-width:72ch}
+  .move .lab{font-weight:700;color:var(--good);font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-right:8px}
+  .move span.b{color:var(--ink-soft);font-size:15.5px}
+  .trap{border-left:3px solid var(--warn);background:var(--warn-bg);border-radius:0 10px 10px 0;
+    padding:12px 16px;margin:16px 0;max-width:72ch}
+  .trap .lab{font-weight:700;color:var(--warn);font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-right:8px}
+  .trap span.b{color:var(--ink-soft);font-size:15.5px}
+
+  .say{background:var(--accent-soft);border:1px solid var(--line-strong);border-radius:10px;
+    padding:12px 16px;margin:14px 0;max-width:74ch;font-size:15.5px;color:var(--ink-soft)}
+  .say .lab{display:block;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:5px}
+  .say i{color:var(--ink)}
+
+  .tbl-scroll{overflow-x:auto;margin:18px 0;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:620px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{background:var(--surface-2);font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--muted);font-weight:600}
+  tbody tr:last-child td{border-bottom:0}
+  td b{color:var(--ink)}
+
+  details.qa{border:1px solid var(--line);border-radius:10px;margin:8px 0;background:var(--surface);overflow:hidden}
+  details.qa summary{cursor:pointer;padding:12px 40px 12px 16px;font-weight:600;color:var(--ink);
+    position:relative;list-style:none;font-size:15.5px;line-height:1.4}
+  details.qa summary::-webkit-details-marker{display:none}
+  details.qa summary::after{content:"+";position:absolute;right:16px;top:9px;font-family:"IBM Plex Mono",monospace;
+    font-size:19px;color:var(--accent)}
+  details.qa[open] summary::after{content:"–"}
+  details.qa .ans{padding:0 16px 14px;color:var(--ink-soft);font-size:15px;border-top:1px solid var(--line)}
+  details.qa .ans p{margin:12px 0 0;max-width:none}
+
+  figure{margin:22px 0;padding:0}
+  figure svg{max-width:100%;height:auto;display:block;color:var(--ink-soft)}
+  figcaption{font-size:14px;color:var(--muted);margin-top:10px;max-width:70ch}
+
+  .check{background:var(--surface);border:2px solid var(--accent);border-radius:var(--radius);padding:22px 26px;margin:22px 0}
+  .check h3{margin-top:0}
+  .foot{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);color:var(--faint);font-size:13.5px}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:5px}
+</style>
+
+<div class="wrap">
+  <div class="toolbar"><button class="toggle" id="themeBtn" type="button">◐ theme</button></div>
+
+  <header class="hero">
+    <p class="kicker">Interview loop · four rounds</p>
+    <h1>The Four-Round Playbook</h1>
+    <p class="lede">Past-project deep dive → AI system design → business case → culture fit. Each round tests a different muscle, and your two prepared corpora — closed-loop network autonomy and LLM serving economics — cover all four. This is the game plan: what each round is really scoring, your winning move, and the trap to sidestep.</p>
+  </header>
+
+  <!-- ======= STRATEGY MAP ======= -->
+  <section id="map">
+    <div class="r-head"><span class="r-num">MAP</span><h2>The one-glance strategy</h2></div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Round</th><th>What they're really scoring</th><th>Your winning move</th><th>The trap</th></tr></thead>
+        <tbody>
+          <tr><td><b>1 · Deep dive</b></td><td>Was it really <em>you</em>? Can you go three levels deep on any claim?</td><td>Numbers you can defend + the alternative you rejected and why</td><td>"We did…" with no "I", and un-auditable numbers</td></tr>
+          <tr><td><b>2 · System design</b></td><td>Structure under ambiguity; do you design for <em>safety</em> and <em>eval</em>, not just boxes?</td><td>Clarify → skeleton → one deep dive → safety envelope → a concrete trace</td><td>Jumping to architecture before asking what "assist" means</td></tr>
+          <tr><td><b>3 · Business case</b></td><td>Can you translate tech into money and risk, honestly?</td><td>Unit economics + a phased pilot with kill criteria</td><td>Overclaiming autonomy / ROI; ignoring the people cost</td></tr>
+          <tr><td><b>4 · Culture fit</b></td><td>Self-awareness, collaboration, how you handle being wrong</td><td>Six rehearsed STAR-L stories, each ending in a changed behavior</td><td>Stories where you were never wrong</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ======= ROUND 1 ======= -->
+  <section id="r1">
+    <div class="r-head"><span class="r-num">R1</span><h2>Past-project deep dive</h2></div>
+    <p class="r-test">They're testing: <b>ownership, depth, and judgment</b> — not the project itself. Interviewers pick one thread and pull until it snaps or proves solid.</p>
+
+    <h3>Prepare each project at three zoom levels</h3>
+    <ul>
+      <li><strong>30 seconds</strong> — the headline: problem, your role, the result with one number.</li>
+      <li><strong>3 minutes</strong> — context → constraints → the 2–3 decisions that mattered → outcome → what you'd change.</li>
+      <li><strong>15 minutes</strong> — every decision with the <em>alternative you rejected</em> and the evidence that settled it.</li>
+    </ul>
+
+    <div class="move"><span class="lab">Winning move</span><span class="b"><b>The number audit.</b> For every figure you plan to cite (GPUs sized, throughput, cost, latency, % improvement), write down <em>how it was measured</em>. "Walk me through that number" is the most common drill — and the sizing math is now reflex for you: weights = params × bytes, KV per token, bandwidth ÷ bytes for decode, Little's law for concurrency, $/1M from GPU-hours.</span></div>
+
+    <h3>For the DataHouse GPU-sizing story specifically</h3>
+    <ul>
+      <li>Lead with the <strong>method</strong>, not the answer: "I sized from four budgets — weight memory, KV/working memory, bandwidth-bound throughput, and cost per token at target utilization."</li>
+      <li>Have ready: what you <strong>assumed</strong> (batch, context length, utilization %), what <strong>surprised</strong> you, and where reality diverged from the model.</li>
+      <li>Expect: <em>"Why that GPU and not X?" "What if traffic doubled?" "What did you over- or under-provision?"</em> — each is a chance to show the capacity-vs-bandwidth-vs-compute-bound diagnosis.</li>
+    </ul>
+
+    <div class="trap"><span class="lab">Trap</span><span class="b">A story with no failure. Prepare <b>one real miss</b> — a wrong assumption, an outage, a sizing error — plus the fix <em>and the systemic change</em> (a check, a review step, a monitor) that came from it. That answer builds more trust than any success story.</span></div>
+
+    <h3>Drill questions to rehearse against</h3>
+    <details class="qa"><summary>"What was YOUR specific contribution vs. the team's?"</summary><div class="ans"><p>Name the pieces you personally owned ("I built the sizing model and ran the load tests; a teammate owned the deployment pipeline"). Naming collaborators honestly <em>raises</em> credibility. Alternate "I" for your decisions and "we" for shared outcomes.</p></div></details>
+    <details class="qa"><summary>"Why did you choose X? What else did you consider?"</summary><div class="ans"><p>Always answer in the shape: <em>options → criteria → evidence → decision → what would have changed my mind.</em> If you considered nothing else, say what you'd evaluate today — never pretend the alternative analysis happened if it didn't.</p></div></details>
+    <details class="qa"><summary>"What would you do differently now?"</summary><div class="ans"><p>Give a real technical regret (e.g., "I'd have load-tested with our actual input/output length distribution instead of a synthetic 128-token benchmark — it mispredicted concurrency") plus one process regret (e.g., "I'd have set eval gates before the first model swap").</p></div></details>
+  </section>
+
+  <!-- ======= ROUND 2 ======= -->
+  <section id="r2">
+    <div class="r-head"><span class="r-num">R2</span><h2>AI system design: the autonomous network ops assistant</h2></div>
+    <p class="r-test">They're testing: <b>structure under ambiguity, safety thinking, and whether you've operated real systems</b>. If the prompt is a generic RAG/agent design, the same skeleton applies — swap the domain nouns.</p>
+
+    <h3>The 40-minute script</h3>
+    <ol>
+      <li><strong>Clarify (5 min).</strong> Who uses it (NOC engineers? on-call?), and — the money question — <em>does it advise or act?</em> Read-only triage vs. executing changes are different systems. Also: scale (alarms/day, engineers), latency needs, data available, regulatory/data-residency constraints.</li>
+      <li><strong>Skeleton (10 min).</strong> Draw the three-plane diagram below. Narrate left to right, then the safety envelope.</li>
+      <li><strong>Deep dive (15 min).</strong> Let them pick a plane — retrieval, orchestration, safety, or serving. Have depth ready in each.</li>
+      <li><strong>Eval &amp; rollout (5 min).</strong> Shadow → suggest → gated execute. Nobody else mentions this; you should.</li>
+      <li><strong>The trace (5 min).</strong> Walk one incident end-to-end. Concreteness is what interviewers remember.</li>
+    </ol>
+
+    <div class="say"><span class="lab">The framing sentence to open with</span>"An ops assistant isn't one big brain — it's an agent sitting inside a closed loop: <i>awareness → analysis → decision → execution</i>, with feedback. The LLM lives at the slow, human-facing altitude; sub-second control stays algorithmic. And the design's center of gravity is the <i>safety envelope</i> between the agent and the network."</div>
+
+    <figure>
+      <svg viewBox="0 0 880 560" role="img" aria-label="Ops assistant architecture: network data feeds an LLM agent through live tools and indexed retrieval; the agent's proposed actions pass through a safety envelope of confidence gate, blast-radius tier, dry-run, execute, verify and rollback before touching the network; a human approves above.">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+          <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+
+        <!-- HUMAN band -->
+        <rect x="230" y="14" width="420" height="52" rx="9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <text x="440" y="36" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">NOC engineer</text>
+        <text x="440" y="53" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".75">approve · steer · break-glass</text>
+
+        <!-- Agent core -->
+        <rect x="300" y="196" width="280" height="74" rx="10" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.8"/>
+        <text x="440" y="226" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--accent)">LLM agent</text>
+        <text x="440" y="245" text-anchor="middle" font-size="11.5" fill="var(--accent)">plan · correlate · draft RCA + fix</text>
+
+        <!-- human <-> agent arrows -->
+        <line x1="408" y1="196" x2="408" y2="70" stroke="currentColor" stroke-width="1.4" marker-end="url(#arr)"/>
+        <text x="398" y="138" text-anchor="end" font-size="11.5" fill="currentColor">proposes, with evidence</text>
+        <line x1="472" y1="70" x2="472" y2="192" stroke="currentColor" stroke-width="1.4" marker-end="url(#arr)"/>
+        <text x="482" y="138" font-size="11.5" fill="currentColor">approve / veto</text>
+
+        <!-- Left: live tools -->
+        <rect x="36" y="188" width="216" height="90" rx="9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <text x="144" y="212" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Live tools (structured)</text>
+        <text x="144" y="231" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".8">telemetry · KPIs · alarms</text>
+        <text x="144" y="248" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".8">topology graph · inventory</text>
+        <text x="144" y="265" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".8">queried at answer time</text>
+        <line x1="252" y1="226" x2="296" y2="226" stroke="currentColor" stroke-width="1.4" marker-end="url(#arr)"/>
+        <text x="274" y="216" text-anchor="middle" font-size="11" fill="currentColor">tool calls</text>
+
+        <!-- Right: RAG -->
+        <rect x="628" y="188" width="216" height="90" rx="9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <text x="736" y="212" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">RAG (unstructured)</text>
+        <text x="736" y="231" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".8">runbooks · past incidents</text>
+        <text x="736" y="248" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".8">vendor docs — hybrid search</text>
+        <text x="736" y="265" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".8">+ rerank, with citations</text>
+        <line x1="628" y1="226" x2="584" y2="226" stroke="currentColor" stroke-width="1.4" marker-end="url(#arr)"/>
+        <text x="606" y="216" text-anchor="middle" font-size="11" fill="currentColor">retrieves</text>
+
+        <!-- Safety envelope -->
+        <rect x="120" y="330" width="640" height="98" rx="10" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="7 5"/>
+        <text x="440" y="352" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--accent)">SAFETY ENVELOPE</text>
+        <text x="150" y="380" font-size="11.5" fill="currentColor">confidence gate</text>
+        <line x1="252" y1="376" x2="272" y2="376" stroke="currentColor" stroke-width="1.2" marker-end="url(#arr)"/>
+        <text x="278" y="380" font-size="11.5" fill="currentColor">blast-radius tier</text>
+        <line x1="388" y1="376" x2="408" y2="376" stroke="currentColor" stroke-width="1.2" marker-end="url(#arr)"/>
+        <text x="414" y="380" font-size="11.5" fill="currentColor">dry-run / twin</text>
+        <line x1="506" y1="376" x2="526" y2="376" stroke="currentColor" stroke-width="1.2" marker-end="url(#arr)"/>
+        <text x="532" y="380" font-size="11.5" fill="currentColor">execute</text>
+        <line x1="590" y1="376" x2="610" y2="376" stroke="currentColor" stroke-width="1.2" marker-end="url(#arr)"/>
+        <text x="616" y="380" font-size="11.5" fill="currentColor">verify KQIs</text>
+        <text x="150" y="410" font-size="11.5" fill="currentColor" opacity=".85">below gate → escalate to human, not act</text>
+        <text x="616" y="410" font-size="11.5" fill="currentColor" opacity=".85">fail → auto-rollback</text>
+
+        <!-- agent -> envelope -->
+        <line x1="440" y1="270" x2="440" y2="326" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#arrA)"/>
+        <text x="450" y="302" font-size="11.5" fill="var(--accent)">approved action</text>
+
+        <!-- Network band -->
+        <rect x="120" y="470" width="640" height="56" rx="9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <text x="440" y="493" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">Network / OSS</text>
+        <text x="440" y="511" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".75">RAN · Core · Transport — acted on via intent APIs (TMF921) &amp; ticketing</text>
+
+        <!-- envelope -> network, network -> tools feedback -->
+        <line x1="440" y1="428" x2="440" y2="466" stroke="currentColor" stroke-width="1.4" marker-end="url(#arr)"/>
+        <text x="450" y="452" font-size="11.5" fill="currentColor">intent, not raw config</text>
+        <path d="M 120 498 L 76 498 L 76 282" fill="none" stroke="currentColor" stroke-width="1.2" marker-end="url(#arr)"/>
+        <text x="70" y="392" text-anchor="end" font-size="11.5" fill="currentColor" transform="rotate(-90 70 392)">streams telemetry</text>
+      </svg>
+      <figcaption><strong>The shape to memorize and redraw.</strong> Two kinds of grounding feed the agent — live structured tools for anything that changes by the minute, indexed RAG for anything written by humans. The agent never touches the network directly: every action crosses a safety envelope, and the network's telemetry closes the loop back into awareness.</figcaption>
+    </figure>
+
+    <h3>The seven decisions to narrate (with the "because")</h3>
+    <ul>
+      <li><strong>The LLM stays out of the fast loop.</strong> Sub-second corrections (load balancing, protection switching) stay algorithmic; the LLM operates at the minutes-scale analysis/decision altitude and the human interface. An LLM's latency and failure modes disqualify it from real-time control — saying this out loud is a senior tell.</li>
+      <li><strong>Two retrieval kinds, never one.</strong> Topology, inventory, and telemetry are <em>queried live via tools</em> — embedding them would serve stale state. Runbooks, past incidents, and vendor docs are <em>indexed</em> (hybrid BM25 + dense, reranked, answers must cite sources).</li>
+      <li><strong>Actions go through intent APIs, not raw device config.</strong> The agent emits a declarative "what" (TMF921-style intent, or a ticket/change request); domain controllers own the "how." Bounded interface, auditable, reversible.</li>
+      <li><strong>Confidence gating + blast-radius tiering.</strong> Every proposal carries a confidence score and an impact tier (read-only → draft ticket → single-cell change → wider). High confidence and small blast radius may auto-run <em>later</em>; everything else escalates to a human with the evidence attached.</li>
+      <li><strong>Transactional execution.</strong> Dry-run/what-if first where a twin exists; execute; verify the KPIs/KQIs actually recovered within a time budget; auto-rollback on failure. Idempotent, desired-state actions so retries and rollbacks are safe.</li>
+      <li><strong>HITL → HOTL progression, per scenario.</strong> Launch human-in-the-loop (approve before act) on everything; graduate individual, well-measured scenarios to human-on-the-loop (act, human can veto). Autonomy is granted per scenario, never as a global badge.</li>
+      <li><strong>Eval-gated rollout.</strong> A golden set of past incidents; measure RCA top-3 accuracy, remediation acceptance rate by real engineers, citation faithfulness. Ship shadow → suggest → gated execute, with rollback criteria. Any model/quant/prompt change re-runs the gate.</li>
+    </ul>
+
+    <h3>The serving sidebar — your home turf, volunteer it</h3>
+    <div class="panel">
+      <p><strong>Model &amp; hosting:</strong> telco operational data rarely leaves the operator's boundary → default to a <strong>self-hosted open-weight model</strong> in their VPC (a 70B-class dense in FP8 on 2×H100, or an MoE like gpt-oss-120b in MXFP4 on a single 80 GB H100 — memory from total params, speed from ~5B active). Optionally a frontier API fallback for the hardest cases <em>if policy allows</em>.</p>
+      <p><strong>Serving:</strong> vLLM with continuous batching; <strong>prefix caching</strong> is a genuine win here — every request shares the long system prompt and tool schemas, so TTFT drops sharply. SLO: TTFT under ~1–2 s streaming, ~30–50 ms/token; that's a copilot, not real-time control, which is exactly why the LLM lives at this altitude.</p>
+      <p><strong>Cost sanity check:</strong> at ~$0.2–0.5 per 1M tokens well-batched, an incident consuming ~50k tokens costs a fraction of a cent — against minutes of engineer time. The GPU bill is a rounding error; the eval and integration effort is the real cost. Saying that unprompted is a business-round preview.</p>
+    </div>
+
+    <h3>The trace — rehearse this until it's fluid</h3>
+    <ol>
+      <li>Transport link degrades → <strong>alarm fan-out</strong> across RAN and Core (hundreds of correlated alarms).</li>
+      <li>Assistant <strong>queries topology + telemetry (tools)</strong>, correlates the storm to one probable root; <strong>retrieves</strong> a matching past incident and the runbook section (cited).</li>
+      <li>Emits: <em>"Probable root: fiber degradation on link X, confidence 0.87. Impact: 3 enterprise slices at SLA risk. Proposed: reroute via Y (blast-radius tier 2). Evidence: …"</em></li>
+      <li>Tier 2 → <strong>one-click human approval</strong> → executes via intent API → <strong>verifies</strong> KQIs recover in the verification window → posts the incident summary to the ticket.</li>
+      <li>Counterfactual: had confidence been 0.5, it <strong>escalates with the evidence bundle instead of acting</strong> — the safe-degradation path is part of the design, not an afterthought.</li>
+    </ol>
+
+    <h3>If the prompt is plain "design a RAG system"</h3>
+    <p>Same skeleton, fewer nouns: clarify corpus/users/freshness → ingestion (chunk by structure, not fixed size; keep metadata/ACLs) → hybrid retrieval + reranker → grounded generation with citations and an "I don't know" path → <strong>eval</strong> (retrieval recall and answer faithfulness, separately) → freshness and access control → serving/cost. The differentiators are the same two: <em>separate structured-live from unstructured-indexed data</em>, and <em>eval as a first-class component</em>.</p>
+
+    <h3>Probes they'll throw</h3>
+    <details class="qa"><summary>"What about hallucinations? This is a network — a wrong action is an outage."</summary><div class="ans"><p>Three layers: <strong>grounding</strong> (answers must cite retrieved sources or live tool output; ungrounded claims are suppressed), <strong>the safety envelope</strong> (an LLM never touches the network directly — confidence gate, impact tier, dry-run, human approval, verify + rollback), and <strong>eval</strong> (faithfulness measured on the golden set, shadow mode before any action rights). The design assumption is that the model <em>will</em> sometimes be wrong — the system is built so a wrong proposal cannot become an outage.</p></div></details>
+    <details class="qa"><summary>"Why not fine-tune instead of RAG?"</summary><div class="ans"><p>The knowledge is <em>fast-moving and auditable</em> — topology changes daily, runbooks get edited, and answers must cite sources for trust and compliance. RAG + tools handles freshness and attribution; fine-tuning bakes in stale facts and gives no citations. Where fine-tuning (or LoRA) earns its place: output format, domain jargon, tool-calling reliability — a small adapter on the base model, cheap to serve alongside it.</p></div></details>
+    <details class="qa"><summary>"How do you know it's working?"</summary><div class="ans"><p>Offline: golden incident set — RCA top-1/top-3 accuracy, remediation acceptance rate, citation faithfulness. Online: MTTR and triage-time deltas measured against a holdout of un-assisted incidents, engineer thumbs-up rate, and the one that matters for trust: <strong>zero incorrect automated actions</strong>, verified by the transactional execute-verify path. Report per-scenario, and gate every change on re-running the offline suite.</p></div></details>
+    <details class="qa"><summary>"How does this scale to 100k alarms a day?"</summary><div class="ans"><p>The LLM should never see 100k alarms. Classic correlation/dedup (topology-aware, algorithmic) compresses the storm first; the agent reasons over the compressed summary plus targeted tool queries. Serving-side: continuous batching, prefix caching for the shared prompt, and replicas sized with Little's law (concurrent incidents × tokens per incident). The expensive resource is engineer attention, not GPU time — the design optimizes what reaches a human.</p></div></details>
+  </section>
+
+  <!-- ======= ROUND 3 ======= -->
+  <section id="r3">
+    <div class="r-head"><span class="r-num">R3</span><h2>Business-case discussion</h2></div>
+    <p class="r-test">They're testing: <b>can you turn technology into money, honestly</b> — with unit economics, sensitivity, and a plan that survives contact with a CFO.</p>
+
+    <h3>The five-beat structure</h3>
+    <ol>
+      <li><strong>Quantify the baseline.</strong> Incidents/month, mean triage and MTTR minutes, loaded engineer cost, SLA-credit exposure. No baseline, no case.</li>
+      <li><strong>Lay out the options.</strong> Do nothing / buy a SaaS-API solution / build on open weights / hybrid. Name the honest strengths of each — including "do nothing."</li>
+      <li><strong>Unit economics.</strong> Value per incident vs. cost per incident. Your cost formula: $/1M tokens = GPU-$/hr ÷ (tok/s × 3600 ÷ 1e6); then the truthful add-on — the GPUs are cheap, the <em>team</em> (platform, eval, on-call) is the cost line that decides build-vs-buy.</li>
+      <li><strong>Sensitivity.</strong> "What would have to be true": the case survives if triage improves ≥ X% and acceptance rate ≥ Y%; it dies if engineers ignore the suggestions. State the kill criteria yourself.</li>
+      <li><strong>Phased plan.</strong> 1: shadow + golden-set eval (no user impact). 2: suggest-only on 2–3 scoped scenarios, measure MTTR delta on a holdout. 3: gated execution for the top scenario. Expand only on evidence.</li>
+    </ol>
+
+    <div class="panel">
+      <h3>A worked mini-case (adapt the numbers to theirs)</h3>
+      <p>NOC handles <strong>10,000 incidents/month</strong>, mean triage 25 min. Assistant cuts triage <strong>30%</strong> → 10,000 × 7.5 min ≈ <strong>1,250 engineer-hours/month</strong> ≈ ~7 FTE-equivalents ≈ <strong>$0.8–1M/year</strong> of capacity (at ~$120k loaded) — before counting faster MTTR reducing SLA credits.</p>
+      <p>Cost side: 2×H100 nodes reserved ≈ tens of $k/year — negligible. The real line: <strong>1.5–2 platform/ML engineers + eval infra ≈ $400–600k/year</strong>. Net: positive if the 30% holds; the pilot exists to prove that number, and the kill criterion is written down before we start: <em>if suggestion-acceptance is under ~40% after one quarter, we stop and re-scope.</em></p>
+    </div>
+
+    <div class="move"><span class="lab">Winning move</span><span class="b">Volunteer the <b>honesty items</b> before they ask: token cost is a rounding error, people cost dominates; autonomy is per-scenario and starts at suggest-only; and API-per-token beats self-hosting at low or spiky volume — the crossover is a utilization bet, and data-residency may decide it regardless of price.</span></div>
+    <div class="trap"><span class="lab">Trap</span><span class="b">Promising "full autonomy" or hockey-stick ROI. The credible pitch is boring: scoped scenarios, measured deltas, expansion gated on evidence. Boring wins the room.</span></div>
+  </section>
+
+  <!-- ======= ROUND 4 ======= -->
+  <section id="r4">
+    <div class="r-head"><span class="r-num">R4</span><h2>Culture fit</h2></div>
+    <p class="r-test">They're testing: <b>self-awareness, collaboration, and how you behave when you're wrong</b>. This round is lost by winging it, not by lacking stories.</p>
+
+    <h3>Build a six-story bank (STAR-L: Situation, Task, Action, Result, Learning)</h3>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Theme</th><th>The question shapes it answers</th><th>What the ending must contain</th></tr></thead>
+        <tbody>
+          <tr><td><b>Disagreement</b></td><td>"Tell me about a technical conflict"</td><td>You argued with <em>data</em>, and either changed their mind or changed yours — both are wins</td></tr>
+          <tr><td><b>Failure</b></td><td>"A time you were wrong / something broke"</td><td>Your mistake named plainly, the fix, and the <em>systemic</em> change</td></tr>
+          <tr><td><b>Ambiguity</b></td><td>"Vague goal — what did you do?"</td><td>You imposed structure: clarified the objective, cut scope, shipped a v1</td></tr>
+          <tr><td><b>Influence</b></td><td>"Convincing without authority"</td><td>A prototype, a measurement, or a doc did the convincing — not volume</td></tr>
+          <tr><td><b>Lifting others</b></td><td>"Mentoring / making the team better"</td><td>Someone else's win, enabled by you, that outlived your involvement</td></tr>
+          <tr><td><b>Hard feedback</b></td><td>"Toughest feedback you've received"</td><td>Real feedback, initial sting admitted, concrete behavior change since</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The AI-responsibility question — you have a real answer</h3>
+    <div class="say"><span class="lab">When they ask "how do you think about AI safety in ops automation"</span>Don't give platitudes — give the framework you actually hold: <i>"Autonomy is earned per scenario, never granted globally. Every automated action carries a confidence score and a blast-radius tier; below the gate it escalates to a human with evidence instead of acting; execution is transactional — verify the effect, roll back on failure; and humans move from in-the-loop to on-the-loop only as measured trust accumulates. The system is designed assuming the model will sometimes be wrong."</i> That's a values answer with engineering underneath it.</div>
+
+    <h3>Questions to ask them (pick three)</h3>
+    <ul>
+      <li>"How do model or prompt changes get validated before production — is there an eval culture, or is that something to build?"</li>
+      <li>"Who decides when an automation graduates from suggest-only to acting? What's the worst automated action that's happened?"</li>
+      <li>"What would 'great' look like for this role at six months — and what's the failure mode you've seen in this seat?"</li>
+      <li>"What's the honest state of the data — can the assistant actually query topology and telemetry today, or is that the first year of work?"</li>
+    </ul>
+  </section>
+
+  <!-- ======= CHECKLIST ======= -->
+  <section id="check">
+    <div class="r-head"><span class="r-num">✓</span><h2>Night-before checklist</h2></div>
+    <div class="check">
+      <h3>Ninety minutes, in this order</h3>
+      <ol>
+        <li>Say each project's <strong>30-second version</strong> out loud, twice.</li>
+        <li>Redraw the <strong>architecture diagram</strong> from memory on paper — planes, two retrieval kinds, safety envelope, feedback arrow.</li>
+        <li>Recite the <strong>five formulas</strong>: weights = params × bytes · KV = 2·layers·kv_heads·head_dim·bytes · decode ≈ BW ÷ bytes · concurrency = rate × latency · $/1M = $/hr ÷ (tok/s × 3600 ÷ 1e6).</li>
+        <li>Rehearse the <strong>incident trace</strong> once, including the low-confidence counterfactual.</li>
+        <li>Skim your <strong>six stories</strong> — headline and learning line only.</li>
+        <li>Write the <strong>three questions</strong> you'll ask them. Sleep.</li>
+      </ol>
+    </div>
+    <p class="foot">Companion to the LLM Serving Interview Kit (formulas, GPU specs, deep answers) and the plain-English guide. The system-design round fuses both corpora: closed-loop autonomy gives the skeleton and the safety language; serving economics staffs and prices it. Adapt every number to the company's actual scale in the room.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themeBtn');
+  function cur(){try{return localStorage.getItem('playbook-theme')}catch(e){return null}}
+  function sys(){return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
+  function apply(t){if(t==='dark'||t==='light'){root.setAttribute('data-theme',t)}else{root.removeAttribute('data-theme')}}
+  var saved=cur(); if(saved){apply(saved)}
+  function eff(){return root.getAttribute('data-theme')||sys()}
+  if(btn){btn.addEventListener('click',function(){var n=eff()==='dark'?'light':'dark';apply(n);try{localStorage.setItem('playbook-theme',n)}catch(e){}});}
+})();
+</script>
