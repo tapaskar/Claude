@@ -1,0 +1,79 @@
+{
+ "baseline": {
+  "tok_day": 268500000.0,
+  "peak_a": 6533.333333333334,
+  "peak_b": 925.0000000000002,
+  "serving": 3,
+  "prod": 10
+ },
+ "scenarios": [
+  {
+   "name": "Every UAI gets an RFO (not 35%)",
+   "tok_day": 705300000.0,
+   "peak_a": 18666.7,
+   "peak_b": 925.0,
+   "serving": 6,
+   "prod": 16
+  },
+  {
+   "name": "Compression misses: 3x more UAI/day",
+   "tok_day": 738900000.0,
+   "peak_a": 19600.0,
+   "peak_b": 925.0,
+   "serving": 6,
+   "prod": 16
+  },
+  {
+   "name": "Deeper agent loop: 6 turns not 3",
+   "tok_day": 503700000.0,
+   "peak_a": 13066.7,
+   "peak_b": 925.0,
+   "serving": 5,
+   "prod": 14
+  },
+  {
+   "name": "Long-context RFO: 24k in not 6k",
+   "tok_day": 930000000.0,
+   "peak_a": 24908.3,
+   "peak_b": 925.0,
+   "serving": 7,
+   "prod": 18
+  },
+  {
+   "name": "Verbose RFO: 1,500 out not 400",
+   "tok_day": 308925000.0,
+   "peak_a": 7656.3,
+   "peak_b": 925.0,
+   "serving": 3,
+   "prod": 10
+  },
+  {
+   "name": "Chat becomes the primary UI: 50k calls/day",
+   "tok_day": 377980000.0,
+   "peak_a": 6533.3,
+   "peak_b": 3966.1,
+   "serving": 4,
+   "prod": 12
+  },
+  {
+   "name": "WORST CASE: every UAI, 6 turns, 24k ctx",
+   "tok_day": 5157300000.0,
+   "peak_a": 142333.3,
+   "peak_b": 925.0,
+   "serving": 35,
+   "prod": 74
+  },
+  {
+   "name": "LEAN: RFO only for P1/P2 (12% of UAI)",
+   "tok_day": 113940000.0,
+   "peak_a": 2240.0,
+   "peak_b": 925.0,
+   "serving": 2,
+   "prod": 8
+  }
+ ],
+ "cap_a": 4246.323252117737,
+ "cap_b": 2658.010422662293,
+ "breakeven_tok_yr": 467200000000.0,
+ "onprem_yr": 280320.0
+}

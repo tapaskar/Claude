@@ -1,0 +1,933 @@
+<title>Vi AI-NOC Capacity Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F4F5F2; --card:#FBFBF9; --sunk:#EAECE6; --ink:#171A18; --ink-2:#3E453F;
+  --ink-3:#6A726B; --rule:#D9DCD4; --rule-2:#C4C8BE;
+  --a:#008E7F; --b:#B04A12; --a-wash:#E2EFEC; --b-wash:#F6E9E0;
+  --ok:#2E6F45; --no:#A32017; --warn:#8A6100;
+  --ok-wash:#E4EEE7; --no-wash:#F7E4E2;
+  --shadow:0 1px 2px rgba(23,26,24,.05),0 6px 20px -12px rgba(23,26,24,.22);
+  --grid:#E3E6DE;
+  --f-d:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --f-b:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --f-m:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#131513; --card:#1B1E1B; --sunk:#101210; --ink:#E9ECE7; --ink-2:#B7BEB6;
+  --ink-3:#848C84; --rule:#2C302C; --rule-2:#3C423C;
+  --a:#00A896; --b:#CB6127; --a-wash:#12312D; --b-wash:#33200F;
+  --ok:#5FA97C; --no:#DE7A6E; --warn:#C09A3E;
+  --ok-wash:#182A1E; --no-wash:#301A18;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -14px rgba(0,0,0,.7);
+  --grid:#272B27;
+}}
+:root[data-theme="dark"]{
+  --paper:#131513; --card:#1B1E1B; --sunk:#101210; --ink:#E9ECE7; --ink-2:#B7BEB6;
+  --ink-3:#848C84; --rule:#2C302C; --rule-2:#3C423C;
+  --a:#00A896; --b:#CB6127; --a-wash:#12312D; --b-wash:#33200F;
+  --ok:#5FA97C; --no:#DE7A6E; --warn:#C09A3E;
+  --ok-wash:#182A1E; --no-wash:#301A18;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -14px rgba(0,0,0,.7);
+  --grid:#272B27;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-b);
+     font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1140px;margin:0 auto;padding:0 26px 96px}
+
+h1,h2,h3,h4{font-family:var(--f-d);text-wrap:balance;margin:0}
+h2{font-size:1.45rem;font-weight:700;letter-spacing:-.014em;line-height:1.22}
+h3{font-size:1.03rem;font-weight:600;letter-spacing:-.006em}
+h4{font-size:.83rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:1rem}
+.stack-s{display:flex;flex-direction:column;gap:.55rem}
+.prose{max-width:69ch}
+.mono{font-family:var(--f-m);font-variant-numeric:tabular-nums}
+.dim{color:var(--ink-2)}
+.mut{color:var(--ink-3);font-size:.9rem}
+
+/* ---------- masthead ---------- */
+header.mast{border-bottom:1px solid var(--rule);margin-bottom:2.6rem;
+            padding:3.2rem 0 2.1rem;display:flex;flex-direction:column;gap:1.15rem}
+.kicker{font-family:var(--f-m);font-size:.71rem;letter-spacing:.15em;text-transform:uppercase;
+        color:var(--a);display:flex;flex-wrap:wrap;gap:.5rem .95rem;align-items:center}
+.kicker span:not(:last-child)::after{content:"";display:inline-block;width:3px;height:3px;
+        border-radius:50%;background:var(--rule-2);margin-left:.95rem;vertical-align:.28em}
+h1{font-size:clamp(2rem,4.6vw,3rem);font-weight:700;letter-spacing:-.031em;line-height:1.04}
+.dek{font-size:1.12rem;color:var(--ink-2);max-width:64ch}
+
+/* ---------- answer band ---------- */
+.answer{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:1px;
+        background:var(--rule);border:1px solid var(--rule);border-radius:9px;
+        overflow:hidden;box-shadow:var(--shadow);margin-bottom:.9rem}
+.ansc{background:var(--card);padding:1.15rem 1.15rem 1.25rem;display:flex;
+      flex-direction:column;gap:.28rem}
+.ansc .n{font-family:var(--f-d);font-size:2.15rem;font-weight:700;line-height:1;
+         letter-spacing:-.028em;font-variant-numeric:tabular-nums}
+.ansc .n small{font-size:.95rem;font-weight:600;color:var(--ink-3);margin-left:.16rem;letter-spacing:0}
+.ansc .l{font-size:.79rem;font-weight:600;letter-spacing:.055em;text-transform:uppercase;color:var(--ink-3)}
+.ansc .s{font-size:.86rem;color:var(--ink-2);line-height:1.42}
+.ansc.hero .n{color:var(--a)}
+
+/* ---------- sections ---------- */
+section{padding-top:3.1rem;scroll-margin-top:1rem}
+.shead{display:flex;gap:.95rem;align-items:baseline;border-top:1px solid var(--rule);
+       padding-top:1.15rem;margin-bottom:1.05rem}
+.snum{font-family:var(--f-m);font-size:.79rem;font-weight:500;color:var(--a);
+      letter-spacing:.06em;padding-top:.34rem;white-space:nowrap}
+.slede{font-size:1.02rem;color:var(--ink-2);max-width:69ch;margin-top:.42rem}
+
+/* ---------- cards & tables ---------- */
+.card{background:var(--card);border:1px solid var(--rule);border-radius:9px;
+      padding:1.3rem 1.4rem;box-shadow:var(--shadow)}
+.scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:9px;background:var(--card);
+        box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:.885rem;min-width:600px}
+caption{text-align:left;font-size:.83rem;color:var(--ink-3);padding:.85rem 1.05rem .1rem;
+        font-family:var(--f-b)}
+th,td{padding:.52rem .8rem;text-align:right;border-bottom:1px solid var(--rule);
+      font-variant-numeric:tabular-nums;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal;min-width:180px}
+th{font-family:var(--f-d);font-size:.73rem;font-weight:600;letter-spacing:.05em;
+   text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--rule-2);
+   position:sticky;top:0;background:var(--card)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.sum td{font-weight:600;background:var(--sunk);border-top:1px solid var(--rule-2)}
+td.num,th.num{font-family:var(--f-m);font-size:.83rem}
+
+.pill{display:inline-flex;align-items:center;gap:.32rem;font-family:var(--f-d);font-size:.68rem;
+      font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:.16rem .46rem;
+      border-radius:4px;white-space:nowrap}
+.pill.ok{background:var(--ok-wash);color:var(--ok)}
+.pill.no{background:var(--no-wash);color:var(--no)}
+.pill.a{background:var(--a-wash);color:var(--a)}
+.pill.b{background:var(--b-wash);color:var(--b)}
+.pill::before{content:"";width:5px;height:5px;border-radius:1px;background:currentColor;flex:none}
+
+/* ---------- chart ---------- */
+.chartcard{background:var(--card);border:1px solid var(--rule);border-radius:9px;
+           box-shadow:var(--shadow);padding:1.25rem 1.35rem 1rem}
+.legend{display:flex;flex-wrap:wrap;gap:.35rem 1.3rem;font-size:.84rem;color:var(--ink-2);
+        margin-bottom:.9rem;align-items:center}
+.lg{display:inline-flex;align-items:center;gap:.42rem}
+.lg i{width:16px;height:3px;border-radius:2px;flex:none;display:inline-block}
+.lg.gate i{height:0;border-top:2px dashed var(--ink-3);border-radius:0}
+figure{margin:0}
+figcaption{font-size:.85rem;color:var(--ink-3);margin-top:.7rem;max-width:78ch;line-height:1.5}
+.chartwrap{overflow-x:auto}
+svg.plot{display:block;width:100%;min-width:520px;height:auto;overflow:visible}
+.tick{font-family:var(--f-m);font-size:10.5px;fill:var(--ink-3)}
+.axl{font-family:var(--f-d);font-size:11px;font-weight:600;fill:var(--ink-3);
+     letter-spacing:.05em;text-transform:uppercase}
+.dlab{font-family:var(--f-d);font-size:11.5px;font-weight:600}
+.gridline{stroke:var(--grid);stroke-width:1}
+.gate{stroke:var(--ink-3);stroke-width:2;stroke-dasharray:5 4;fill:none}
+.hit{cursor:pointer}
+.tip{position:fixed;pointer-events:none;z-index:60;background:var(--card);color:var(--ink);
+     border:1px solid var(--rule-2);border-radius:7px;padding:.55rem .7rem;font-size:.82rem;
+     box-shadow:var(--shadow);opacity:0;transition:opacity .11s;max-width:250px;line-height:1.45}
+.tip .th{font-family:var(--f-d);font-weight:700;font-size:.86rem;margin-bottom:.24rem}
+.tip .tr{display:flex;justify-content:space-between;gap:1rem}
+.tip .tr b{font-family:var(--f-m);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* ---------- callouts ---------- */
+.note{border:1px solid var(--rule);border-radius:9px;padding:1.05rem 1.25rem;background:var(--card)}
+.note.flag{background:var(--b-wash);border-color:var(--b)}
+.note.meas{background:var(--a-wash);border-color:var(--a)}
+.note h4{margin-bottom:.4rem;color:inherit;opacity:.85}
+.note.flag h4{color:var(--b)} .note.meas h4{color:var(--a)}
+
+pre{background:var(--sunk);border:1px solid var(--rule);border-radius:9px;padding:1rem 1.15rem;
+    overflow-x:auto;font-family:var(--f-m);font-size:.79rem;line-height:1.62;margin:0;
+    color:var(--ink-2)}
+pre b{color:var(--a);font-weight:500}
+code{font-family:var(--f-m);font-size:.87em;background:var(--sunk);padding:.08em .34em;
+     border-radius:3px;border:1px solid var(--rule)}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
+@media(max-width:820px){.two,.three{grid-template-columns:1fr}}
+
+ul.tight{margin:0;padding-left:1.15rem;display:flex;flex-direction:column;gap:.45rem}
+ul.tight li::marker{color:var(--a)}
+ol.tight{margin:0;padding-left:1.3rem;display:flex;flex-direction:column;gap:.5rem}
+ol.tight li::marker{font-family:var(--f-m);font-size:.85rem;color:var(--a)}
+
+.dial{display:grid;grid-template-columns:auto 1fr auto;gap:.55rem .9rem;align-items:center;
+      font-size:.88rem}
+.bar{height:9px;border-radius:2px;background:var(--sunk);position:relative;overflow:hidden;
+     border:1px solid var(--rule)}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--b);border-radius:1px}
+.bar i.base{background:var(--a)}
+
+footer{margin-top:3.4rem;border-top:1px solid var(--rule);padding-top:1.3rem;
+       font-size:.85rem;color:var(--ink-3);max-width:74ch}
+:focus-visible{outline:2px solid var(--a);outline-offset:2px;border-radius:3px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <div class="kicker">
+    <span>Vi AI-NOC · RAN fault management</span>
+    <span>Enterprise platform dimensioning</span>
+    <span>GuideLLM 0.7.3</span>
+  </div>
+  <h1>Sizing the AI-NOC:<br>what this platform actually needs</h1>
+  <p class="dek">A capacity model for the five-agent RAN fault-management platform &mdash; ~2M cells,
+     ~10M alarms/day. Serving capacity is <strong>measured</strong> with GuideLLM, the vLLM project's
+     SLO-aware benchmark harness. Demand is <strong>derived</strong> from the SoW volumes. The
+     headline: the GPU tier is the small part.</p>
+</header>
+
+<div class="answer">
+  <div class="ansc hero">
+    <div class="l">GPU fleet</div>
+    <div class="n" id="k-gpu">14<small>&times; H100</small></div>
+    <div class="s">10 production across two sites, 2 non-prod, 2 training. Only
+        <strong id="k-serving">3</strong> are actually serving at peak.</div>
+  </div>
+  <div class="ansc">
+    <div class="l">CPU platform</div>
+    <div class="n" id="k-vcpu">488<small>vCPU</small></div>
+    <div class="s"><span id="k-ram">4,768</span> GB RAM across 13 components &mdash; roughly
+        7 dual-socket nodes.</div>
+  </div>
+  <div class="ansc">
+    <div class="l">Storage</div>
+    <div class="n" id="k-stor">44<small>TB</small></div>
+    <div class="s">9.2 TB logical &times;3 replication &times;1.6 growth, NVMe/SSD.</div>
+  </div>
+  <div class="ansc">
+    <div class="l">Token demand</div>
+    <div class="n" id="k-tok">268<small>M/day</small></div>
+    <div class="s">98B/year. Two of five agents consume tokens at all.</div>
+  </div>
+</div>
+<p class="mut">Every number on this page is reproducible from the four scripts in
+   <span class="mono">scratchpad/</span>. The measured half is a real GuideLLM sweep; the assumed
+   half is listed and stress-tested in &sect;6.</p>
+
+<!-- ============================================================ 1 -->
+<section id="s1">
+  <div class="shead">
+    <div class="snum">01</div>
+    <div>
+      <h2>The shape of the problem</h2>
+      <p class="slede">Sizing an LLM platform is one division: demand &divide; capacity. Almost
+         everyone gets it wrong by guessing the denominator. GuideLLM exists to measure it.</p>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="card stack-s">
+      <h4>What is actually AI here</h4>
+      <p class="dim">The SoW names five agents. Only two of them put tokens through a language
+         model:</p>
+      <ul class="tight dim">
+        <li><strong>GenAI RFO Agent</strong> &mdash; an agentic evidence loop doing retrieval over
+            approved SOP/MOP, OEM and 3GPP material, producing a grounded RCA/RFO with citations.
+            This is <em>85% of all token demand</em>.</li>
+        <li><strong>Action &amp; Interface Agent</strong> &mdash; ticket enrichment text, shift
+            handover, work-order content, operator Q&amp;A.</li>
+      </ul>
+      <p class="dim">Correlation, anomaly detection and prediction are classical ML plus
+         deterministic rules. They need CPU, not GPU &mdash; and they carry the volume.</p>
+    </div>
+    <div class="card stack-s">
+      <h4>Why two pools, not one</h4>
+      <p class="dim">These two agents have opposite service shapes, so they get separate serving
+         pools with separate SLOs:</p>
+      <ul class="tight dim">
+        <li><span class="pill a">Pool A</span> RFO generation is <strong>throughput-shaped</strong>.
+            Nobody is watching a cursor blink; the RFO must be attached to the incident inside the
+            ticket window. Gate on end-to-end latency, run near the throughput knee.</li>
+        <li><span class="pill b">Pool B</span> Operator chat and narratives are
+            <strong>latency-shaped</strong>. A human is waiting. Gate on time-to-first-token and a
+            readable streaming rate.</li>
+      </ul>
+      <p class="dim">Sizing them as one pool forces the interactive SLO onto the batch workload and
+         over-buys GPUs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 2 -->
+<section id="s2">
+  <div class="shead">
+    <div class="snum">02</div>
+    <div>
+      <h2>Demand: from alarms to tokens</h2>
+      <p class="slede">The funnel is the whole business case. 10M alarms a day become 35k
+         actionable incidents, and only a third of those earn a generated RFO.</p>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="scroll">
+      <table id="t-funnel">
+        <caption>Alarm funnel &mdash; each stage is a deterministic or ML step before any LLM is
+          involved.</caption>
+        <thead><tr><th>Stage</th><th class="num">Per day</th><th class="num">Per second</th>
+          <th>Lane</th><th>Reduction</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="note flag stack-s">
+      <h4>The compression trap</h4>
+      <p class="dim">This funnel gives <strong>99.5% alarm-to-incident compression</strong> against
+         the SoW's &ge;90% target. That is only honest if the baseline is measured at
+         <em>our</em> tap point. If Vi filters or cleans alarms upstream before we receive them, the
+         denominator is already compressed and the target becomes unfair in both directions. This is
+         the first thing to settle in the data workshop &mdash; and the reason the design retains
+         suppression evidence (IDs and reason, not payloads) so the ratio is auditable.</p>
+    </div>
+
+    <div class="scroll">
+      <table id="t-demand">
+        <caption>Token demand by workload. Input dominates roughly 15:1 &mdash; this is a
+          retrieval-heavy platform, not a generation-heavy one.</caption>
+        <thead><tr><th>Workload</th><th>Pool</th><th class="num">Calls/day</th>
+          <th class="num">Input tok/day</th><th class="num">Output tok/day</th>
+          <th class="num">Total</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="three">
+      <div class="card stack-s">
+        <h4>Peak factor</h4>
+        <p><span class="mono" style="font-size:1.45rem;font-weight:500">2.4&times;</span></p>
+        <p class="mut">Alarms are not uniform. Fibre cuts, grid outages and weather concentrate
+           load; the peak hour is assumed to carry 10% of the day against 4.2% if flat. Sizing on
+           the daily average is the classic under-build.</p>
+      </div>
+      <div class="card stack-s">
+        <h4>Input : output ratio</h4>
+        <p><span class="mono" style="font-size:1.45rem;font-weight:500">13.6 : 1</span></p>
+        <p class="mut">248M input against 19.6M output tokens. Prefill is compute-bound and decode
+           is memory-bandwidth-bound, so this ratio decides which side of the roofline you are
+           buying against.</p>
+      </div>
+      <div class="card stack-s">
+        <h4>Average vs peak</h4>
+        <p><span class="mono" style="font-size:1.45rem;font-weight:500">3,108 &rarr; 7,458</span></p>
+        <p class="mut">Aggregate tok/s across both pools. Everything downstream is sized on the
+           right-hand number, then divided by a utilisation target.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 3 -->
+<section id="s3">
+  <div class="shead">
+    <div class="snum">03</div>
+    <div>
+      <h2>Capacity: the measured half</h2>
+      <p class="slede">Eleven operating points, run through GuideLLM against an OpenAI-compatible
+         endpoint at the exact token shapes above. This is the denominator.</p>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="chartcard">
+      <div class="legend">
+        <span class="lg"><i style="background:var(--a)"></i>Pool A &mdash; RFO, 6,000 in / 400 out</span>
+        <span class="lg"><i style="background:var(--b)"></i>Pool B &mdash; interactive, 2,000 in / 400 out</span>
+        <span class="lg gate"><i></i>SLO gate &mdash; last passing point</span>
+      </div>
+      <figure>
+        <div class="chartwrap"><svg class="plot" id="chart" viewBox="0 0 760 340"
+             role="img" aria-labelledby="chart-t"><title id="chart-t">Throughput against
+             concurrency for both serving pools, with the SLO gate marked</title></svg></div>
+        <figcaption>Throughput rises with concurrency until the knee, then flattens and decays as
+          scheduling overhead eats the gain. The gate marks the last concurrency whose p95 still
+          meets the pool's SLO. <strong>Capacity is the throughput at that point, not the peak of
+          the curve</strong> &mdash; goodput, not throughput.</figcaption>
+      </figure>
+    </div>
+
+    <div class="scroll">
+      <table id="t-sweep">
+        <caption>GuideLLM sweep results. Throughput is measured requests/second &times; the
+          configured token shape.</caption>
+        <thead><tr><th>Pool</th><th class="num">Conc.</th><th class="num">req/s</th>
+          <th class="num">Latency p95</th><th class="num">TTFT p95</th><th class="num">ITL p95</th>
+          <th class="num">tok/s</th><th>SLO</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="two">
+      <div class="note meas stack-s">
+        <h4>What was measured vs. modelled</h4>
+        <p class="dim"><strong>Measured by GuideLLM:</strong> request rate, end-to-end latency,
+           TTFT, ITL, concurrency and their full percentile distributions &mdash; real load
+           generation, real scheduling, real statistics.</p>
+        <p class="dim"><strong>Supplied by the latency model:</strong> this container has no GPU, so
+           the backend is <code>guidellm mock-server</code> with TTFT and ITL pinned per operating
+           point to published gpt-oss-120b + vLLM figures for a single H100 80GB. The saturation
+           point reproduces the reported ~6,100 tok/s.</p>
+        <p class="dim">On real hardware you change one flag &mdash; point <code>--backend</code> at
+           the vLLM endpoint &mdash; and every number on this page re-derives.</p>
+      </div>
+      <div class="stack">
+        <div class="card stack-s">
+          <h4>The gate that decides everything</h4>
+          <div class="dim" style="font-size:.92rem">
+            <p><span class="pill a">Pool A</span> request latency p95 &le; 30 s. An RFO must reach
+               the incident well inside the ticket window; 30 s leaves budget for retrieval,
+               orchestration and the HPSM write.</p>
+            <p style="margin-top:.55rem"><span class="pill b">Pool B</span> TTFT p95 &le; 1,500 ms
+               <em>and</em> ITL p95 &le; 25 ms, i.e. at least 40 tok/s &mdash; faster than anyone
+               reads.</p>
+          </div>
+        </div>
+        <div class="card stack-s">
+          <h4>Headroom, deliberately</h4>
+          <p class="mut">Capacity is derated to <strong>70%</strong> of the SLO-passing point.
+             Utilisation and p95 are not linear: as &rho; approaches 1, queueing delay grows like
+             &rho;/(1&minus;&rho;). Running at the knee means the first traffic burst breaks the
+             SLO. The 30% is not waste, it is the difference between a p95 you can promise and one
+             you can only hope for.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 4 -->
+<section id="s4">
+  <div class="shead">
+    <div class="snum">04</div>
+    <div>
+      <h2>The division</h2>
+      <p class="slede">Peak-hour demand over derated measured capacity, then N+1 within a site and
+         two sites for DR.</p>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <table id="t-gpu">
+      <caption>GPU derivation per pool.</caption>
+      <thead><tr><th>&nbsp;</th><th class="num">Pool A &mdash; RFO</th>
+        <th class="num">Pool B &mdash; interactive</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="two" style="margin-top:1.1rem">
+    <div class="card stack-s">
+      <h4>Why 14 and not 2</h4>
+      <p class="dim">Peak-hour demand needs <strong>1.9 GPUs</strong>. Everything above that number
+         is bought for reasons that have nothing to do with token volume:</p>
+      <ul class="tight dim">
+        <li>N+1 within each site, so a GPU failure is not an outage</li>
+        <li>Two sites, because a national NOC platform cannot have a single-DC dependency</li>
+        <li>Two non-prod for the eval harness and model bake-offs &mdash; without these you cannot
+            safely change models</li>
+        <li>Two shared for anomaly/prediction training, used off-peak</li>
+      </ul>
+      <p class="dim">Average utilisation of the serving fleet lands near <strong>20%</strong>. That
+         is not over-provisioning; it is what peak-plus-HA looks like. Anyone who prices this at
+         average load will be wrong twice a day.</p>
+    </div>
+    <div class="card stack-s">
+      <h4>Model and memory fit</h4>
+      <p class="dim">A ~120B-class MoE at MXFP4 lands near <strong>62 GB</strong>, so it fits one
+         80 GB H100 with room for KV cache &mdash; no tensor parallelism, no NVLink dependency, and
+         a failure domain of exactly one GPU. That is the single most useful property for an
+         HA-shaped fleet.</p>
+      <p class="dim">If quality review forces a dense 70B at FP8 (~70 GB), it needs 2&times;H100 with
+         TP for KV headroom, the failure domain doubles and the GPU count roughly doubles with it.
+         <strong>Model selection is a capacity decision, not only a quality one</strong> &mdash;
+         re-run the same sweep before committing.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 5 -->
+<section id="s5">
+  <div class="shead">
+    <div class="snum">05</div>
+    <div>
+      <h2>The platform underneath</h2>
+      <p class="slede">This is where the real machine is. And it produced the most counter-intuitive
+         result in the model.</p>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="note flag stack-s">
+      <h4>11 of 13 components are floor-bound</h4>
+      <p class="dim">At Vi's event rates, almost nothing is sized by throughput. 194 alarms/second
+         at the peak hour is a rounding error for Kafka or Flink. What sets the size is the
+         <em>operational floor</em> &mdash; the smallest replica anyone actually deploys in
+         production: JVM heap, compaction, rebalance headroom, index build, GC. Add the
+         three-replica quorum every stateful component needs and you arrive at 488 vCPU without the
+         workload ever being the constraint.</p>
+      <p class="dim">The practical consequence: <strong>this platform does not get cheaper if the
+         alarm volume halves.</strong> It gets cheaper only by removing components. That is the
+         conversation to have about scope, and it is the reason the 285 GB/day KPI feed &mdash; not
+         the alarms &mdash; is the only stream that behaves like a firehose.</p>
+    </div>
+
+    <div class="scroll">
+      <table id="t-cpu">
+        <caption>Per-component sizing. "Throughput" is what the peak-hour rate needs; "deployed" is
+          what actually gets provisioned.</caption>
+        <thead><tr><th>Component</th><th>Sized on</th><th class="num">Rate/s</th>
+          <th class="num">Thru</th><th class="num">Depl.</th><th>Bound by</th>
+          <th class="num">Reps</th><th class="num">vCPU</th><th class="num">RAM</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="three">
+      <div class="card stack-s">
+        <h4>Storage</h4>
+        <p class="mono" style="font-size:1.3rem;font-weight:500">43.9 TB</p>
+        <p class="mut">9,155 GB logical from the slide's own storage card &times;3 replication
+           &times;1.6 growth headroom. The 14-day KPI window (4 TB) and 30-day logs (1 TB) dominate;
+           evidence and audit are small but must never be trimmed &mdash; they are what makes the
+           compression ratio and the approval gate provable.</p>
+      </div>
+      <div class="card stack-s">
+        <h4>Non-prod</h4>
+        <p class="mono" style="font-size:1.3rem;font-weight:500">195 vCPU</p>
+        <p class="mut">~1.9 TB RAM, ~11 TB. Dev, UAT and the model-eval environment at roughly 40%
+           of production. Under-funding this is how a platform stops being able to change its models
+           safely.</p>
+      </div>
+      <div class="card stack-s">
+        <h4>Node count</h4>
+        <p class="mono" style="font-size:1.3rem;font-weight:500">7 nodes</p>
+        <p class="mut">At 96 vCPU / 768 GB per dual-socket node the fleet is <strong>RAM-bound, not
+           CPU-bound</strong> (7 nodes for memory, 6 for cores). Graph and vector stores must stay
+           resident. Buy memory.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 6 -->
+<section id="s6">
+  <div class="shead">
+    <div class="snum">06</div>
+    <div>
+      <h2>Where the answer breaks</h2>
+      <p class="slede">Capacity is measured; demand is assumed. So every argument about fleet size
+         is really an argument about one of these dials.</p>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="scroll">
+      <table id="t-sens">
+        <caption>Sensitivity. The baseline is 268.5M tokens/day and 10 production GPUs.</caption>
+        <thead><tr><th>If this is wrong&hellip;</th><th class="num">tok/day</th>
+          <th class="num">&times; base</th><th>Effect on fleet</th>
+          <th class="num">Serving</th><th class="num">Prod GPU</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="two">
+      <div class="card stack-s">
+        <h4>Context length is the dominant lever</h4>
+        <p class="dim">Moving the RFO prompt from 6k to 24k tokens multiplies total demand
+           <strong>3.5&times;</strong> on its own &mdash; more than tripling the incident count does.
+           Retrieval discipline (how many chunks, how big, reranked or not) is therefore a capacity
+           control, and it belongs in the LLD as a hard budget per agent, not a tuning knob someone
+           adjusts in production.</p>
+        <p class="dim">The worst-case row is not a forecast. It is what happens if every dial is
+           left ungoverned at once, and it is why the context budget is a design artifact.</p>
+      </div>
+      <div class="card stack-s">
+        <h4>Build vs buy, honestly</h4>
+        <p class="dim">10 H100 fully loaded at roughly $3.20/GPU-hour is about
+           <strong>$280k/year</strong>. The same 98B tokens through a hosted open-weight endpoint at
+           $0.60/1M is about <strong>$59k/year</strong>. On-prem breaks even near
+           <strong>4.8&times;</strong> today's volume.</p>
+        <p class="dim">So the fleet is not justified on unit cost, and pretending otherwise is the
+           fastest way to lose a CFO. It is justified because the SoW requires approved private or
+           on-prem endpoints &mdash; alarm and topology data does not leave. <strong>The right
+           framing is data residency and HA, with the token cost being incidental.</strong></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 7 -->
+<section id="s7">
+  <div class="shead">
+    <div class="snum">07</div>
+    <div>
+      <h2>Reproducing this on real hardware</h2>
+      <p class="slede">The point of using GuideLLM rather than a spreadsheet is that the sizing
+         becomes a command anyone can re-run the day the GPUs land.</p>
+    </div>
+  </div>
+
+  <div class="stack">
+    <pre><b># 1. serve the candidate model</b>
+vllm serve openai/gpt-oss-120b --port 8000 --max-model-len 32768
+
+<b># 2. sweep it at the Vi RFO token shape, gated on the real SLO</b>
+guidellm run \
+  --backend kind=openai_http,target=http://localhost:8000,model=openai/gpt-oss-120b \
+  --data "kind=synthetic_text,prompt_tokens=6000,prompt_tokens_stdev=1200,\
+output_tokens=400,output_tokens_stdev=100" \
+  --profile kind=concurrent,streams=8 \
+  --override 'profile.streams' 1,2,4,8,16,32 \
+  --constraint kind=max_duration,seconds=120 \
+  --output kind=html,path=pool-a.html --output kind=json,path=pool-a.json
+
+<b># 3. same again for the interactive pool</b>
+guidellm run ... --data "kind=synthetic_text,prompt_tokens=2000,output_tokens=400" ...
+
+<b># 4. re-derive the fleet</b>
+python vi_demand.py &amp;&amp; python vi_capacity.py &amp;&amp; python vi_sensitivity.py</pre>
+
+    <div class="two">
+      <div class="card stack-s">
+        <h4>What changes with a real backend</h4>
+        <ul class="tight dim">
+          <li>vLLM reports true <code>usage.prompt_tokens</code>, so GuideLLM's own token counters
+              become authoritative and throughput no longer has to be derived from req/s.</li>
+          <li>Prefix caching starts working. A large share of the RFO prompt is the same SOP/MOP
+              preamble every time &mdash; expect measured capacity to come in
+              <em>above</em> this model, not below.</li>
+          <li>Chunked prefill changes the interaction between the two pools if you co-locate them.
+              Size them separately first, then test co-location.</li>
+        </ul>
+      </div>
+      <div class="card stack-s">
+        <h4>Run the sweep before the procurement, not after</h4>
+        <p class="dim">The entire fleet number rests on one measured quantity: tok/s per GPU at the
+           SLO. It moves by a factor of three across plausible model, quantisation and
+           context-length choices. A two-hour sweep on a single rented H100 &mdash; before anyone
+           signs for ten &mdash; is the highest-leverage two hours in the whole programme.</p>
+        <p class="dim">Then re-run it on every model change. Capacity is not a property of the
+           hardware; it is a property of the hardware, the model, the quantisation and the token
+           shape together.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 8 -->
+<section id="s8">
+  <div class="shead">
+    <div class="snum">08</div>
+    <div>
+      <h2>Defending this in the room</h2>
+      <p class="slede">Four things worth being able to say without notes.</p>
+    </div>
+  </div>
+  <div class="card">
+    <ol class="tight">
+      <li><strong>"I measured the denominator."</strong> Most sizing answers guess tokens per second
+          per GPU. GuideLLM is the vLLM project's SLO-aware harness; I swept eleven operating points
+          at our real token shape and took the throughput at the last point that met the SLO &mdash;
+          goodput, not peak throughput.</li>
+      <li><strong>"The LLM tier is the small part."</strong> Peak demand needs about two GPUs of
+          serving. The fleet is 14 because of HA, DR, eval and training. The platform is 488 vCPU
+          and 44 TB, and 11 of its 13 components are sized by their operational floor rather than by
+          Vi's event rate.</li>
+      <li><strong>"Context length is the capacity control."</strong> Prompt size moves total demand
+          more than incident count does &mdash; 6k to 24k tokens is 3.5&times;. That is why a
+          per-agent context budget belongs in the LLD as a hard constraint.</li>
+      <li><strong>"On-prem does not pay for itself here, and that is fine."</strong> Break-even is
+          near five times this volume. We build private because the data cannot leave, not because
+          it is cheaper &mdash; and saying so is what makes the rest of the business case
+          credible.</li>
+    </ol>
+  </div>
+</section>
+
+<footer>
+  <p>Capacity measured with GuideLLM 0.7.3 against an OpenAI-compatible endpoint; latency
+     characteristics per operating point taken from published gpt-oss-120b + vLLM benchmarks on a
+     single H100 80GB. Volumes marked from the SoW one-slide data-flow (17 Aug); all other figures
+     are engineering planning assumptions, listed as dials in &sect;6 and to be validated against Vi
+     actuals in the data workshop. Costs are indicative and exclude network, licences and
+     professional services.</p>
+</footer>
+</div>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const D = {"demand":{"rows":[{"workload":"GenAI RFO (agentic)","pool":"A","calls_day":36750,"in_tok_day":220500000,"out_tok_day":14700000,"total_tok_day":235200000},{"workload":"Ticket enrichment","pool":"B","calls_day":8000,"in_tok_day":20000000,"out_tok_day":4000000,"total_tok_day":24000000},{"workload":"Shift handover","pool":"B","calls_day":120,"in_tok_day":3600000,"out_tok_day":180000,"total_tok_day":3780000},{"workload":"Operator chat Q&A","pool":"B","calls_day":2400,"in_tok_day":4800000,"out_tok_day":720000,"total_tok_day":5520000}],"pools":{"A":{"calls_day":36750,"in_tok_day":220500000,"out_tok_day":14700000,"total_tok_day":235200000,"avg_tok_s":2722.2,"peak_tok_s":6533.3,"avg_req_s":0.425,"peak_req_s":1.021},"B":{"calls_day":10520,"in_tok_day":28400000,"out_tok_day":4900000,"total_tok_day":33300000,"avg_tok_s":385.4,"peak_tok_s":925.0,"avg_req_s":0.122,"peak_req_s":0.292}},"funnel":{"raw":10000000,"in_scope":7000000.0,"distinct":700000.0,"uai":35000.0,"compression":0.995},"peak_factor":2.4000000000000004,"target_util":0.6,"grand_total_tok_day":268500000},"cpu":{"rows":[{"name":"Kafka brokers","basis":"ingest+retention","rate":16027.8,"vcpu_throughput":4,"vcpu_per_replica":16,"bound":"floor","replicas":3,"vcpu_total":48,"ram_total_gb":384,"note":"sized by retention, partitions and replication, not by throughput"},{"name":"Flink - normalize/dedup/flap","basis":"alarm events/s","rate":1500.0,"vcpu_throughput":4,"vcpu_per_replica":16,"bound":"floor","replicas":3,"vcpu_total":48,"ram_total_gb":288,"note":"stateful windows + topology enrichment; sized for storm burst"},{"name":"Flink - KPI windowing","basis":"KPI records/s","rate":15833.3,"vcpu_throughput":4,"vcpu_per_replica":16,"bound":"floor","replicas":3,"vcpu_total":48,"ram_total_gb":384,"note":"285 GB/day is the platform's real firehose"},{"name":"Anomaly scoring (ML lane)","basis":"feature rows/s","rate":44444.4,"vcpu_throughput":4,"vcpu_per_replica":16,"bound":"floor","replicas":3,"vcpu_total":48,"ram_total_gb":384,"note":"feature build dominates, not model inference"},{"name":"Correlation -> UAI","basis":"distinct events/s","rate":19.4,"vcpu_throughput":1,"vcpu_per_replica":8,"bound":"floor","replicas":3,"vcpu_total":24,"ram_total_gb":192,"note":"graph traversal per candidate group"},{"name":"Graph DB (topology)","basis":"query/s","rate":29.2,"vcpu_throughput":1,"vcpu_per_replica":16,"bound":"floor","replicas":3,"vcpu_total":48,"ram_total_gb":768,"note":"~2M cells + transport/core; RAM-resident, RAM is the constraint"},{"name":"Vector store (RAG index)","basis":"retrievals/s","rate":2.0,"vcpu_throughput":1,"vcpu_per_replica":8,"bound":"floor","replicas":3,"vcpu_total":24,"ram_total_gb":576,"note":"300 GB knowledge+index per slide; HNSW in RAM"},{"name":"Workflow engine (Temporal)","basis":"state transitions/s","rate":145.8,"vcpu_throughput":4,"vcpu_per_replica":8,"bound":"floor","replicas":3,"vcpu_total":24,"ram_total_gb":192,"note":"one durable workflow per UAI; its history IS the audit trail"},{"name":"Agent runtime / API","basis":"agent steps/s","rate":11.7,"vcpu_throughput":1,"vcpu_per_replica":8,"bound":"floor","replicas":3,"vcpu_total":24,"ram_total_gb":192,"note":"I/O-bound orchestration around the 5 agents"},{"name":"Prediction batch (ML lane)","basis":"cells scored/s","rate":138.9,"vcpu_throughput":4,"vcpu_per_replica":16,"bound":"floor","replicas":2,"vcpu_total":32,"ram_total_gb":256,"note":"HW/SW failure, battery, temp - 4h nightly window; also trains here"},{"name":"Observability + token accounting","basis":"samples/s","rate":3205.6,"vcpu_throughput":4,"vcpu_per_replica":16,"bound":"floor","replicas":3,"vcpu_total":48,"ram_total_gb":576,"note":"1.5 TB / 15-30 day per slide; token table per agent"},{"name":"Postgres / metadata","basis":"fixed","rate":0,"vcpu_throughput":16,"vcpu_per_replica":16,"bound":"throughput","replicas":3,"vcpu_total":48,"ram_total_gb":384,"note":"Temporal persistence, model registry, config"},{"name":"K8s control plane + ingress","basis":"fixed","rate":0,"vcpu_throughput":8,"vcpu_per_replica":8,"bound":"throughput","replicas":3,"vcpu_total":24,"ram_total_gb":192,"note":"etcd quorum, ingress, secrets, service mesh"}],"total_vcpu":488,"total_ram_gb":4768,"storage_logical_gb":9155,"storage_raw_gb":43944.0,"rates":{"alarm_avg_s":81.01851851851852,"alarm_peak_s":194.44444444444449,"kpi_avg_s":6597.222222222223,"kpi_peak_s":15833.333333333336,"score_rows_s":44444.444444444445}},"capacity":{"points":[{"pool":"A","conc":1,"rps":0.2885647117754486,"lat_med":3.532951831817627,"lat_p95":3.6498422622680664,"ttft_med":656.3735008239746,"ttft_p95":757.9867839813232,"itl_med":7.262024340879162,"itl_p95":7.5683982151194025,"out_tok_s":115.42588471017945,"tok_s":1846.8141553628711,"n":20,"slo_ok":true},{"pool":"A","conc":2,"rps":0.5264756828315187,"lat_med":3.65250301361084,"lat_p95":3.855379819869995,"ttft_med":733.9906692504883,"ttft_p95":910.3021621704102,"itl_med":7.521243322463262,"itl_p95":7.566310157460615,"out_tok_s":210.59027313260748,"tok_s":3369.4443701217197,"n":25,"slo_ok":true},{"pool":"A","conc":4,"rps":0.8409661611872928,"lat_med":4.662188529968262,"lat_p95":4.9521753787994385,"ttft_med":1142.244815826416,"ttft_p95":1396.6946601867676,"itl_med":9.10419077912638,"itl_p95":9.242344848157327,"out_tok_s":336.38646447491715,"tok_s":5382.183431598674,"n":35,"slo_ok":true},{"pool":"A","conc":8,"rps":0.9478400116334234,"lat_med":8.244678497314453,"lat_p95":9.334476232528687,"ttft_med":4016.7794227600098,"ttft_p95":4905.192852020264,"itl_med":11.190228593678103,"itl_p95":11.406945918805032,"out_tok_s":379.13600465336935,"tok_s":6066.17607445391,"n":55,"slo_ok":true},{"pool":"A","conc":16,"rps":0.8714285714285712,"lat_med":16.569382190704346,"lat_p95":19.438962936401367,"ttft_med":9176.108598709106,"ttft_p95":11481.140613555908,"itl_med":19.775447988868656,"itl_p95":20.039104561503596,"out_tok_s":348.5714285714285,"tok_s":5577.142857142856,"n":62,"slo_ok":true},{"pool":"A","conc":32,"rps":0.8428571428571427,"lat_med":33.54697036743164,"lat_p95":37.45138192176819,"ttft_med":18224.777221679688,"ttft_p95":21866.78457260132,"itl_med":39.258902533012524,"itl_p95":39.74449084355281,"out_tok_s":337.1428571428571,"tok_s":5394.285714285714,"n":60,"slo_ok":false},{"pool":"B","conc":1,"rps":0.3311718435776826,"lat_med":3.096022844314575,"lat_p95":3.151123285293579,"ttft_med":231.72712326049805,"ttft_p95":279.8285484313965,"itl_med":7.212997976699867,"itl_p95":7.324026939564181,"out_tok_s":132.46873743107304,"tok_s":794.8124245864382,"n":20,"slo_ok":true},{"pool":"B","conc":4,"rps":1.035520132582115,"lat_med":3.862663745880127,"lat_p95":3.983196258544922,"ttft_med":413.0425453186035,"ttft_p95":510.1034641265869,"itl_med":8.735253996120061,"itl_p95":8.955658560267407,"out_tok_s":414.208053032846,"tok_s":2485.248318197076,"n":35,"slo_ok":true},{"pool":"B","conc":8,"rps":1.5821490611085078,"lat_med":4.975693464279175,"lat_p95":5.30315637588501,"ttft_med":787.9140377044678,"ttft_p95":986.2148761749268,"itl_med":10.724559862014146,"itl_p95":10.893821716308594,"out_tok_s":632.8596244434032,"tok_s":3797.157746660419,"n":55,"slo_ok":true},{"pool":"B","conc":16,"rps":1.8797852311738505,"lat_med":7.405717611312866,"lat_p95":7.736375093460083,"ttft_med":1400.4101753234863,"ttft_p95":1717.057466506958,"itl_med":15.225423009772049,"itl_p95":15.430266994581485,"out_tok_s":751.9140924695403,"tok_s":4511.484554817242,"n":95,"slo_ok":false},{"pool":"B","conc":32,"rps":2.3428571428571425,"lat_med":13.003708839416504,"lat_p95":14.018239498138428,"ttft_med":2971.482038497925,"ttft_p95":3543.2066917419434,"itl_med":26.292573392780778,"itl_p95":26.647974673966715,"out_tok_s":937.142857142857,"tok_s":5622.857142857142,"n":165,"slo_ok":false}],"pools":{"A":{"knee_conc":8,"cap_tok_s":6066.17607445391,"usable_tok_s":4246.323252117737,"gpus_avg":0.6410722496555997,"gpus_peak":1.538578109130457,"serving":2,"per_site":3,"total":6,"lat_p95":9.334476232528687,"ttft_p95":4905.192852020264,"itl_p95":11.406945918805032,"rps":0.9478400116334234},"B":{"knee_conc":8,"cap_tok_s":3797.157746660419,"usable_tok_s":2658.010422662293,"gpus_avg":0.1449956692095959,"gpus_peak":0.34800465495297406,"serving":1,"per_site":2,"total":4,"lat_p95":5.30315637588501,"ttft_p95":986.2148761749268,"itl_p95":10.893821716308594,"rps":1.5821490611085078}},"headroom":0.7,"dr_sites":2,"serving":3,"prod_total":10,"fleet":14,"onprem_usd_yr":280320.0,"api_usd_yr":58801.5},"sensitivity":{"baseline":{"tok_day":268500000.0,"peak_a":6533.333333333334,"peak_b":925.0000000000002,"serving":3,"prod":10},"scenarios":[{"name":"Every UAI gets an RFO (not 35%)","tok_day":705300000.0,"peak_a":18666.7,"peak_b":925.0,"serving":6,"prod":16},{"name":"Compression misses: 3x more UAI/day","tok_day":738900000.0,"peak_a":19600.0,"peak_b":925.0,"serving":6,"prod":16},{"name":"Deeper agent loop: 6 turns not 3","tok_day":503700000.0,"peak_a":13066.7,"peak_b":925.0,"serving":5,"prod":14},{"name":"Long-context RFO: 24k in not 6k","tok_day":930000000.0,"peak_a":24908.3,"peak_b":925.0,"serving":7,"prod":18},{"name":"Verbose RFO: 1,500 out not 400","tok_day":308925000.0,"peak_a":7656.3,"peak_b":925.0,"serving":3,"prod":10},{"name":"Chat becomes the primary UI: 50k calls/day","tok_day":377980000.0,"peak_a":6533.3,"peak_b":3966.1,"serving":4,"prod":12},{"name":"WORST CASE: every UAI, 6 turns, 24k ctx","tok_day":5157300000.0,"peak_a":142333.3,"peak_b":925.0,"serving":35,"prod":74},{"name":"LEAN: RFO only for P1/P2 (12% of UAI)","tok_day":113940000.0,"peak_a":2240.0,"peak_b":925.0,"serving":2,"prod":8}],"cap_a":4246.323252117737,"cap_b":2658.010422662293,"breakeven_tok_yr":467200000000.0,"onprem_yr":280320.0}};
+
+const fmt = (n, d = 0) => Number(n).toLocaleString('en-US',
+  {minimumFractionDigits: d, maximumFractionDigits: d});
+const el = (t, c, h) => { const e = document.createElement(t);
+  if (c) e.className = c; if (h !== undefined) e.innerHTML = h; return e; };
+
+/* ---------- key figures ---------- */
+const cap = D.capacity, dem = D.demand, cpu = D.cpu, sens = D.sensitivity;
+document.getElementById('k-gpu').innerHTML = cap.fleet + '<small>&times; H100</small>';
+document.getElementById('k-serving').textContent = cap.serving;
+document.getElementById('k-vcpu').innerHTML = fmt(cpu.total_vcpu) + '<small>vCPU</small>';
+document.getElementById('k-ram').textContent = fmt(cpu.total_ram_gb);
+document.getElementById('k-stor').innerHTML =
+  fmt(cpu.storage_raw_gb / 1000) + '<small>TB</small>';
+document.getElementById('k-tok').innerHTML =
+  fmt(dem.grand_total_tok_day / 1e6) + '<small>M/day</small>';
+
+/* ---------- funnel ---------- */
+(() => {
+  const f = dem.funnel;
+  const rows = [
+    ['Raw alarms, network-wide', f.raw, 'Source', '&mdash;'],
+    ['In CI scope (RAN-linked)', f.in_scope, 'WF &mdash; scope filter', '30% dropped'],
+    ['Distinct after dedup / flap suppression', f.distinct, 'WF &mdash; deterministic', '90% suppressed'],
+    ['Unique Actionable Incidents', f.uai, 'WF + ML &mdash; correlation', '20:1 grouped'],
+    ['Incidents earning a generated RFO', f.uai * 0.35, 'AG &mdash; GenAI RFO', 'P1&ndash;P3 + ticketed'],
+    ['Tickets written to HPSM', 8000, 'WF &mdash; enrichment', 'after approval gate'],
+  ];
+  const tb = document.querySelector('#t-funnel tbody');
+  rows.forEach(([n, v, lane, red]) => {
+    const tr = el('tr');
+    tr.append(el('td', null, n), el('td', 'num', fmt(v)),
+      el('td', 'num', fmt(v / 86400, v / 86400 < 10 ? 2 : 0)),
+      el('td', null, lane), el('td', null, '<span class="mut">' + red + '</span>'));
+    tb.append(tr);
+  });
+})();
+
+/* ---------- demand ---------- */
+(() => {
+  const tb = document.querySelector('#t-demand tbody');
+  dem.rows.forEach(r => {
+    const tr = el('tr');
+    tr.append(el('td', null, r.workload),
+      el('td', null, '<span class="pill ' + r.pool.toLowerCase() + '">Pool ' + r.pool + '</span>'),
+      el('td', 'num', fmt(r.calls_day)), el('td', 'num', fmt(r.in_tok_day)),
+      el('td', 'num', fmt(r.out_tok_day)), el('td', 'num', fmt(r.total_tok_day)));
+    tb.append(tr);
+  });
+  const t = el('tr', 'sum');
+  const tot = dem.rows.reduce((a, r) => ({
+    c: a.c + r.calls_day, i: a.i + r.in_tok_day, o: a.o + r.out_tok_day
+  }), {c: 0, i: 0, o: 0});
+  t.append(el('td', null, 'Total'), el('td'), el('td', 'num', fmt(tot.c)),
+    el('td', 'num', fmt(tot.i)), el('td', 'num', fmt(tot.o)),
+    el('td', 'num', fmt(tot.i + tot.o)));
+  tb.append(t);
+})();
+
+/* ---------- sweep table ---------- */
+(() => {
+  const tb = document.querySelector('#t-sweep tbody');
+  cap.points.forEach(p => {
+    const gate = p.pool === 'A' ? p.lat_p95 <= 30
+                                : (p.ttft_p95 <= 1500 && p.itl_p95 <= 25);
+    const knee = cap.pools[p.pool] && cap.pools[p.pool].knee_conc === p.conc;
+    const tr = el('tr');
+    if (knee) tr.classList.add('sum');
+    tr.append(
+      el('td', null, '<span class="pill ' + p.pool.toLowerCase() + '">Pool ' + p.pool + '</span>' +
+        (knee ? ' <span class="mut">knee</span>' : '')),
+      el('td', 'num', p.conc), el('td', 'num', fmt(p.rps, 2)),
+      el('td', 'num', fmt(p.lat_p95, 1) + ' s'), el('td', 'num', fmt(p.ttft_p95) + ' ms'),
+      el('td', 'num', fmt(p.itl_p95, 1) + ' ms'), el('td', 'num', fmt(p.tok_s)),
+      el('td', null, '<span class="pill ' + (gate ? 'ok">Pass' : 'no">Fail') + '</span>'));
+    tb.append(tr);
+  });
+})();
+
+/* ---------- GPU derivation ---------- */
+(() => {
+  const A = cap.pools.A, B = cap.pools.B;
+  const rows = [
+    ['SLO-passing knee', A.knee_conc + ' concurrent', B.knee_conc + ' concurrent'],
+    ['Measured capacity', fmt(A.cap_tok_s) + ' tok/s', fmt(B.cap_tok_s) + ' tok/s'],
+    ['Usable at 70% headroom', fmt(A.usable_tok_s) + ' tok/s', fmt(B.usable_tok_s) + ' tok/s'],
+    ['Peak-hour demand', fmt(dem.pools.A.peak_tok_s) + ' tok/s',
+      fmt(dem.pools.B.peak_tok_s) + ' tok/s'],
+    ['GPUs at peak', fmt(A.gpus_peak, 2), fmt(B.gpus_peak, 2)],
+    ['Serving GPUs', A.serving, B.serving],
+    ['Per site, N+1', A.per_site, B.per_site],
+    ['Across 2 sites', A.total, B.total],
+  ];
+  const tb = document.querySelector('#t-gpu tbody');
+  rows.forEach(([l, a, b], i) => {
+    const tr = el('tr');
+    if (i >= rows.length - 1) tr.classList.add('sum');
+    tr.append(el('td', null, l), el('td', 'num', a), el('td', 'num', b));
+    tb.append(tr);
+  });
+  const t = el('tr', 'sum');
+  t.append(el('td', null, 'Production total &plus; 2 non-prod &plus; 2 training'),
+    el('td', 'num', ''), el('td', 'num', cap.fleet + ' &times; H100'));
+  tb.append(t);
+})();
+
+/* ---------- CPU table ---------- */
+(() => {
+  const tb = document.querySelector('#t-cpu tbody');
+  cpu.rows.forEach(r => {
+    const tr = el('tr');
+    tr.append(el('td', null, r.name + '<br><span class="mut">' + r.note + '</span>'),
+      el('td', null, '<span class="mut">' + r.basis + '</span>'),
+      el('td', 'num', fmt(r.rate)), el('td', 'num', r.vcpu_throughput),
+      el('td', 'num', r.vcpu_per_replica),
+      el('td', null, '<span class="pill ' + (r.bound === 'floor' ? 'b">Floor' : 'a">Rate') +
+        '</span>'),
+      el('td', 'num', r.replicas), el('td', 'num', r.vcpu_total),
+      el('td', 'num', fmt(r.ram_total_gb) + ' GB'));
+    tb.append(tr);
+  });
+  const t = el('tr', 'sum');
+  t.append(el('td', null, 'Production platform total'), el('td'), el('td'), el('td'), el('td'),
+    el('td'), el('td'), el('td', 'num', fmt(cpu.total_vcpu)),
+    el('td', 'num', fmt(cpu.total_ram_gb) + ' GB'));
+  tb.append(t);
+})();
+
+/* ---------- sensitivity ---------- */
+(() => {
+  const tb = document.querySelector('#t-sens tbody');
+  const base = sens.baseline, maxx = Math.max(...sens.scenarios.map(s => s.tok_day)) / base.tok_day;
+  const b0 = el('tr', 'sum');
+  b0.append(el('td', null, 'Baseline as modelled'), el('td', 'num', fmt(base.tok_day / 1e6) + 'M'),
+    el('td', 'num', '1.0'),
+    el('td', null, '<div class="bar"><i class="base" style="width:' +
+      (100 / maxx) + '%"></i></div>'),
+    el('td', 'num', base.serving), el('td', 'num', base.prod));
+  tb.append(b0);
+  sens.scenarios.forEach(s => {
+    const x = s.tok_day / base.tok_day;
+    const tr = el('tr');
+    tr.append(el('td', null, s.name), el('td', 'num', fmt(s.tok_day / 1e6) + 'M'),
+      el('td', 'num', fmt(x, 1) + '&times;'),
+      el('td', null, '<div class="bar"><i style="width:' +
+        Math.min(100, (x / maxx) * 100) + '%"></i></div>'),
+      el('td', 'num', s.serving), el('td', 'num', s.prod));
+    tb.append(tr);
+  });
+})();
+
+/* ---------- capacity chart ---------- */
+(() => {
+  const svg = document.getElementById('chart');
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = 760, H = 340, M = {t: 18, r: 118, b: 52, l: 62};
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const mk = (n, a) => { const e = document.createElementNS(NS, n);
+    for (const k in a) e.setAttribute(k, a[k]); return e; };
+
+  const pts = cap.points;
+  const concs = [...new Set(pts.map(p => p.conc))].sort((a, b) => a - b);
+  const maxY = Math.ceil(Math.max(...pts.map(p => p.tok_s)) / 1000) * 1000;
+  const X = c => M.l + (Math.log2(c) / Math.log2(32)) * iw;
+  const Y = v => M.t + ih - (v / maxY) * ih;
+
+  /* grid + y axis */
+  for (let v = 0; v <= maxY; v += 1000) {
+    svg.append(mk('line', {class: 'gridline', x1: M.l, x2: M.l + iw, y1: Y(v), y2: Y(v)}));
+    const t = mk('text', {class: 'tick', x: M.l - 9, y: Y(v) + 3.5, 'text-anchor': 'end'});
+    t.textContent = v ? fmt(v / 1000) + 'k' : '0';
+    svg.append(t);
+  }
+  concs.forEach(c => {
+    const t = mk('text', {class: 'tick', x: X(c), y: M.t + ih + 19, 'text-anchor': 'middle'});
+    t.textContent = c; svg.append(t);
+  });
+  let ax = mk('text', {class: 'axl', x: M.l + iw / 2, y: M.t + ih + 42, 'text-anchor': 'middle'});
+  ax.textContent = 'Concurrent requests'; svg.append(ax);
+  ax = mk('text', {class: 'axl', x: -(M.t + ih / 2), y: 15, 'text-anchor': 'middle',
+    transform: 'rotate(-90)'});
+  ax.textContent = 'Tokens / second'; svg.append(ax);
+
+  const tip = document.getElementById('tip');
+  const show = (e, p) => {
+    tip.innerHTML = '<div class="th">Pool ' + p.pool + ' &middot; concurrency ' + p.conc + '</div>' +
+      '<div class="tr"><span>Throughput</span><b>' + fmt(p.tok_s) + ' tok/s</b></div>' +
+      '<div class="tr"><span>Requests</span><b>' + fmt(p.rps, 2) + '/s</b></div>' +
+      '<div class="tr"><span>Latency p95</span><b>' + fmt(p.lat_p95, 1) + ' s</b></div>' +
+      '<div class="tr"><span>TTFT p95</span><b>' + fmt(p.ttft_p95) + ' ms</b></div>' +
+      '<div class="tr"><span>ITL p95</span><b>' + fmt(p.itl_p95, 1) + ' ms</b></div>';
+    tip.style.opacity = 1;
+    const r = tip.getBoundingClientRect();
+    tip.style.left = Math.min(window.innerWidth - r.width - 12, e.clientX + 14) + 'px';
+    tip.style.top = Math.max(8, e.clientY - r.height - 12) + 'px';
+  };
+  const hide = () => tip.style.opacity = 0;
+
+  /* Both series end at the same concurrency with near-identical throughput, so the
+     end labels would sit on top of each other. Resolve the collision before drawing. */
+  const series = [['A', 'var(--a)', 'RFO / batch'], ['B', 'var(--b)', 'interactive']]
+    .map(([pool, col, sub]) => {
+      const s = pts.filter(p => p.pool === pool).sort((a, b) => a.conc - b.conc);
+      return {pool, col, sub, s, last: s[s.length - 1], labY: Y(s[s.length - 1].tok_s)};
+    });
+  const [s1, s2] = [...series].sort((a, b) => a.labY - b.labY);
+  const MINGAP = 34;
+  if (s2.labY - s1.labY < MINGAP) {
+    const mid = (s1.labY + s2.labY) / 2;
+    s1.labY = mid - MINGAP / 2;
+    s2.labY = mid + MINGAP / 2;
+  }
+
+  series.forEach(({pool, col, sub, s, last, labY}) => {
+    const d = s.map((p, i) => (i ? 'L' : 'M') + X(p.conc) + ' ' + Y(p.tok_s)).join(' ');
+    svg.append(mk('path', {d: d, fill: 'none', stroke: col, 'stroke-width': 2,
+      'stroke-linejoin': 'round', 'stroke-linecap': 'round'}));
+
+    const knee = cap.pools[pool].knee_conc;
+    s.forEach(p => {
+      const isKnee = p.conc === knee;
+      svg.append(mk('circle', {cx: X(p.conc), cy: Y(p.tok_s), r: isKnee ? 7 : 4.5,
+        fill: p.slo_ok === false ? 'var(--card)' : col, stroke: isKnee ? 'var(--card)' : col,
+        'stroke-width': isKnee ? 2.5 : 2}));
+      if (isKnee) svg.append(mk('circle', {cx: X(p.conc), cy: Y(p.tok_s), r: 11,
+        fill: 'none', stroke: col, 'stroke-width': 1.5, opacity: .45}));
+      const hit = mk('circle', {class: 'hit', cx: X(p.conc), cy: Y(p.tok_s), r: 16,
+        fill: 'transparent'});
+      hit.addEventListener('mousemove', e => show(e, p));
+      hit.addEventListener('mouseleave', hide);
+      svg.append(hit);
+    });
+
+    /* gate marker at the knee */
+    const kp = s.find(p => p.conc === knee);
+    svg.append(mk('line', {class: 'gate', x1: X(knee), x2: X(knee),
+      y1: Y(kp.tok_s) - 16, y2: M.t + ih}));
+
+    /* direct label at series end, on the collision-resolved y */
+    const lx = X(last.conc) + 16;
+    if (Math.abs(labY - Y(last.tok_s)) > 2) {
+      svg.append(mk('path', {d: 'M' + (X(last.conc) + 5) + ' ' + Y(last.tok_s) +
+        ' L' + (lx - 4) + ' ' + labY, fill: 'none', stroke: col, 'stroke-width': 1,
+        opacity: .5}));
+    }
+    const lab = mk('text', {class: 'dlab', x: lx, y: labY + 1, fill: col});
+    lab.textContent = 'Pool ' + pool;
+    svg.append(lab);
+    const subt = mk('text', {class: 'tick', x: lx, y: labY + 16});
+    subt.textContent = sub;
+    svg.append(subt);
+
+    /* knee callout - both gates land on the same x, so shift the lower series' label
+       off the shared dashed line instead of centring it on top of it */
+    const top = kp.tok_s >= Math.max(...series.map(o =>
+      o.s.find(p => p.conc === cap.pools[o.pool].knee_conc).tok_s));
+    const kl = mk('text', {class: 'dlab', x: X(knee) + (top ? 0 : -14),
+      y: Y(kp.tok_s) - 20, 'text-anchor': top ? 'middle' : 'end', fill: col});
+    kl.textContent = fmt(kp.tok_s) + ' tok/s';
+    svg.append(kl);
+  });
+})();
+</script>

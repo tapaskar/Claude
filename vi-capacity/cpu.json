@@ -1,0 +1,171 @@
+{
+ "rows": [
+  {
+   "name": "Kafka brokers",
+   "basis": "ingest+retention",
+   "rate": 16027.8,
+   "vcpu_throughput": 4,
+   "vcpu_per_replica": 16,
+   "bound": "floor",
+   "replicas": 3,
+   "vcpu_total": 48,
+   "ram_total_gb": 384,
+   "note": "sized by retention, partitions and replication, not by throughput"
+  },
+  {
+   "name": "Flink - normalize/dedup/flap",
+   "basis": "alarm events/s",
+   "rate": 1500.0,
+   "vcpu_throughput": 4,
+   "vcpu_per_replica": 16,
+   "bound": "floor",
+   "replicas": 3,
+   "vcpu_total": 48,
+   "ram_total_gb": 288,
+   "note": "stateful windows + topology enrichment; sized for storm burst"
+  },
+  {
+   "name": "Flink - KPI windowing",
+   "basis": "KPI records/s",
+   "rate": 15833.3,
+   "vcpu_throughput": 4,
+   "vcpu_per_replica": 16,
+   "bound": "floor",
+   "replicas": 3,
+   "vcpu_total": 48,
+   "ram_total_gb": 384,
+   "note": "285 GB/day is the platform's real firehose"
+  },
+  {
+   "name": "Anomaly scoring (ML lane)",
+   "basis": "feature rows/s",
+   "rate": 44444.4,
+   "vcpu_throughput": 4,
+   "vcpu_per_replica": 16,
+   "bound": "floor",
+   "replicas": 3,
+   "vcpu_total": 48,
+   "ram_total_gb": 384,
+   "note": "feature build dominates, not model inference"
+  },
+  {
+   "name": "Correlation -> UAI",
+   "basis": "distinct events/s",
+   "rate": 19.4,
+   "vcpu_throughput": 1,
+   "vcpu_per_replica": 8,
+   "bound": "floor",
+   "replicas": 3,
+   "vcpu_total": 24,
+   "ram_total_gb": 192,
+   "note": "graph traversal per candidate group"
+  },
+  {
+   "name": "Graph DB (topology)",
+   "basis": "query/s",
+   "rate": 29.2,
+   "vcpu_throughput": 1,
+   "vcpu_per_replica": 16,
+   "bound": "floor",
+   "replicas": 3,
+   "vcpu_total": 48,
+   "ram_total_gb": 768,
+   "note": "~2M cells + transport/core; RAM-resident, RAM is the constraint"
+  },
+  {
+   "name": "Vector store (RAG index)",
+   "basis": "retrievals/s",
+   "rate": 2.0,
+   "vcpu_throughput": 1,
+   "vcpu_per_replica": 8,
+   "bound": "floor",
+   "replicas": 3,
+   "vcpu_total": 24,
+   "ram_total_gb": 576,
+   "note": "300 GB knowledge+index per slide; HNSW in RAM"
+  },
+  {
+   "name": "Workflow engine (Temporal)",
+   "basis": "state transitions/s",
+   "rate": 145.8,
+   "vcpu_throughput": 4,
+   "vcpu_per_replica": 8,
+   "bound": "floor",
+   "replicas": 3,
+   "vcpu_total": 24,
+   "ram_total_gb": 192,
+   "note": "one durable workflow per UAI; its history IS the audit trail"
+  },
+  {
+   "name": "Agent runtime / API",
+   "basis": "agent steps/s",
+   "rate": 11.7,
+   "vcpu_throughput": 1,
+   "vcpu_per_replica": 8,
+   "bound": "floor",
+   "replicas": 3,
+   "vcpu_total": 24,
+   "ram_total_gb": 192,
+   "note": "I/O-bound orchestration around the 5 agents"
+  },
+  {
+   "name": "Prediction batch (ML lane)",
+   "basis": "cells scored/s",
+   "rate": 138.9,
+   "vcpu_throughput": 4,
+   "vcpu_per_replica": 16,
+   "bound": "floor",
+   "replicas": 2,
+   "vcpu_total": 32,
+   "ram_total_gb": 256,
+   "note": "HW/SW failure, battery, temp - 4h nightly window; also trains here"
+  },
+  {
+   "name": "Observability + token accounting",
+   "basis": "samples/s",
+   "rate": 3205.6,
+   "vcpu_throughput": 4,
+   "vcpu_per_replica": 16,
+   "bound": "floor",
+   "replicas": 3,
+   "vcpu_total": 48,
+   "ram_total_gb": 576,
+   "note": "1.5 TB / 15-30 day per slide; token table per agent"
+  },
+  {
+   "name": "Postgres / metadata",
+   "basis": "fixed",
+   "rate": 0,
+   "vcpu_throughput": 16,
+   "vcpu_per_replica": 16,
+   "bound": "throughput",
+   "replicas": 3,
+   "vcpu_total": 48,
+   "ram_total_gb": 384,
+   "note": "Temporal persistence, model registry, config"
+  },
+  {
+   "name": "K8s control plane + ingress",
+   "basis": "fixed",
+   "rate": 0,
+   "vcpu_throughput": 8,
+   "vcpu_per_replica": 8,
+   "bound": "throughput",
+   "replicas": 3,
+   "vcpu_total": 24,
+   "ram_total_gb": 192,
+   "note": "etcd quorum, ingress, secrets, service mesh"
+  }
+ ],
+ "total_vcpu": 488,
+ "total_ram_gb": 4768,
+ "storage_logical_gb": 9155,
+ "storage_raw_gb": 43944.0,
+ "rates": {
+  "alarm_avg_s": 81.01851851851852,
+  "alarm_peak_s": 194.44444444444449,
+  "kpi_avg_s": 6597.222222222223,
+  "kpi_peak_s": 15833.333333333336,
+  "score_rows_s": 44444.444444444445
+ }
+}

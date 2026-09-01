@@ -1,0 +1,68 @@
+{
+ "rows": [
+  {
+   "workload": "GenAI RFO (agentic)",
+   "pool": "A",
+   "calls_day": 36750,
+   "in_tok_day": 220500000,
+   "out_tok_day": 14700000,
+   "total_tok_day": 235200000
+  },
+  {
+   "workload": "Ticket enrichment",
+   "pool": "B",
+   "calls_day": 8000,
+   "in_tok_day": 20000000,
+   "out_tok_day": 4000000,
+   "total_tok_day": 24000000
+  },
+  {
+   "workload": "Shift handover",
+   "pool": "B",
+   "calls_day": 120,
+   "in_tok_day": 3600000,
+   "out_tok_day": 180000,
+   "total_tok_day": 3780000
+  },
+  {
+   "workload": "Operator chat Q&A",
+   "pool": "B",
+   "calls_day": 2400,
+   "in_tok_day": 4800000,
+   "out_tok_day": 720000,
+   "total_tok_day": 5520000
+  }
+ ],
+ "pools": {
+  "A": {
+   "calls_day": 36750,
+   "in_tok_day": 220500000,
+   "out_tok_day": 14700000,
+   "total_tok_day": 235200000,
+   "avg_tok_s": 2722.2,
+   "peak_tok_s": 6533.3,
+   "avg_req_s": 0.425,
+   "peak_req_s": 1.021
+  },
+  "B": {
+   "calls_day": 10520,
+   "in_tok_day": 28400000,
+   "out_tok_day": 4900000,
+   "total_tok_day": 33300000,
+   "avg_tok_s": 385.4,
+   "peak_tok_s": 925.0,
+   "avg_req_s": 0.122,
+   "peak_req_s": 0.292
+  }
+ },
+ "funnel": {
+  "raw": 10000000,
+  "in_scope": 7000000.0,
+  "distinct": 700000.0,
+  "uai": 35000.0,
+  "compression": 0.995
+ },
+ "peak_factor": 2.4000000000000004,
+ "target_util": 0.6,
+ "grand_total_tok_day": 268500000
+}
