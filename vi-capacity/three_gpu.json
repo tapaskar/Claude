@@ -1,0 +1,81 @@
+{
+ "fleet": 3,
+ "frac_peak": {
+  "A": 1.07700467639132,
+  "B": 0.2436032584670818
+ },
+ "frac_avg": {
+  "A": 0.4487505747589198,
+  "B": 0.1014969684467171
+ },
+ "f_peak": 1.3206079348584017,
+ "f_avg": 0.5502475432056368,
+ "util": {
+  "1": 1.3206079348584017,
+  "2": 0.6603039674292008,
+  "3": 0.44020264495280054
+ },
+ "headroom_n1": 1.6308162629506981,
+ "headroom_no_n1": 2.5593173381277006,
+ "scenarios": [
+  [
+   "Every incident gets an RFO",
+   2.63,
+   false
+  ],
+  [
+   "Compression misses: 3x incidents",
+   2.75,
+   false
+  ],
+  [
+   "Agent loop 3 -> 6 turns",
+   2.0,
+   false
+  ],
+  [
+   "RFO context 6k -> 24k",
+   3.47,
+   false
+  ],
+  [
+   "Verbose RFO 400 -> 1,500 out",
+   1.17,
+   true
+  ],
+  [
+   "Chat becomes primary UI",
+   1.0,
+   true
+  ]
+ ],
+ "gave_up": [
+  [
+   "Two physical pools",
+   "One shared pool, vLLM priority scheduling",
+   "Interactive is only 0.24 GPU of load - it never justified its own hardware."
+  ],
+  [
+   "Two sites, active/active",
+   "Single site",
+   "A DC outage takes the AI-NOC offline. The NOC's existing manual process is the fallback."
+  ],
+  [
+   "2 dedicated non-prod GPUs",
+   "Rented H100 hours for model bake-offs",
+   "Needed a few days a quarter, not continuously. Functional tests run against a small model."
+  ],
+  [
+   "2 dedicated training GPUs",
+   "None",
+   "Anomaly and prediction are classical ML and train on CPU. No LLM fine-tuning in phase 1."
+  ],
+  [
+   "N+1 per site (5 GPU)",
+   "N+1 across the whole platform (3 GPU)",
+   "One spare, not one per pool per site."
+  ]
+ ],
+ "cost_14": 392448.00000000006,
+ "cost_3": 84096.00000000001
+}

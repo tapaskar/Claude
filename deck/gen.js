@@ -36,13 +36,13 @@ const head = (s,x,y,w,t,c) => s.addText(t, {
 const s1 = p.addSlide();
 s1.background = {color: C.paper};
 
-s1.addText('How the fleet number is derived', {
+s1.addText('How three GPUs was arrived at', {
   x:M, y:0.36, w:USE, h:0.5, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:29, bold:true, color:C.ink, charSpacing:-0.4,
 });
 s1.addText([
   {text:'Vi AI-NOC · RAN fault management', options:{color:C.teal, bold:true}},
-  {text:'   ·   ~2M cells, ~10M alarms/day   ·   serving capacity measured with GuideLLM 0.7.3, demand derived from the SoW',
+  {text:'   ·   ~2M cells, ~10M alarms/day   ·   16 GuideLLM operating points; demand derived from the SoW',
    options:{color:C.ink3}},
 ], {x:M, y:0.88, w:USE, h:0.28, isTextBox:true, margin:0, fontFace:F.b, fontSize:11.5});
 
@@ -93,18 +93,18 @@ sq(s1, CX[1]+0.24, CY+0.28, C.teal);
 head(s1, CX[1]+0.40, CY+0.20, CW-0.6, 'DECISION POINTS', C.ink);
 
 const DEC = [
-  ['Two serving pools, not one',
-   'RFO is throughput-shaped; chat is latency-shaped. One pool forces the interactive SLO onto batch work.', 0.50],
+  ['One shared pool, not two',
+   'Chat is latency-shaped but only 0.24 GPU of load. Same model, one deployment, priority scheduling.', 0.50],
   ['Size on goodput, not peak throughput',
-   'Capacity = throughput at the last concurrency whose p95 meets the SLO. A: ≤30 s. B: TTFT ≤1.5 s, ITL ≤25 ms.', 0.50],
-  ['Derate to 70% of the knee',
-   'Queueing delay grows like ρ/(1−ρ). At the knee, the first burst breaks the SLO.', 0.34],
+   'Capacity = throughput at the last concurrency whose p95 meets the SLO. RFO: ≤30 s. Chat: TTFT ≤1.5 s, ITL ≤25 ms.', 0.50],
+  ['Three, because of N+1',
+   'Peak needs 1.37 GPU. Two would meet the SLO; three is the smallest fleet where a GPU can fail at peak hour and still hold.', 0.50],
   ['Model must fit a single GPU',
-   '120B MoE at MXFP4 ≈ 62 GB — no TP, failure domain of one GPU. A dense 70B FP8 needs 2×H100.', 0.50],
-  ['N+1 per site, two sites',
-   'A national NOC platform cannot carry a single-DC dependency. Not token volume — this sets the fleet.', 0.50],
+   '120B MoE at MXFP4 ≈ 62 GB — no TP, failure domain of one GPU, and 21–30 concurrent 6.4k requests of KV headroom.', 0.50],
+  ['Single site, for now',
+   'The one real loss. Manual NOC process is the fallback — but that expires when headcount comes out, so fund site 2 before then.', 0.50],
   ['Measure the denominator',
-   '11-point GuideLLM sweep at our real token shapes, not a vendor tok/s figure.', 0.34],
+   '16-point GuideLLM sweep, including a mixed-traffic run that validates the shared pool to within 3.8%.', 0.34],
 ];
 let dy = CY + 0.58;
 DEC.forEach(([t, sub, sh], i) => {
@@ -121,72 +121,87 @@ DEC.forEach(([t, sub, sh], i) => {
 card(s1, CX[2], CY, CW, CH);
 sq(s1, CX[2]+0.24, CY+0.28, C.rust);
 head(s1, CX[2]+0.40, CY+0.20, CW-0.6, 'PARAMETERS THAT MOVE IT', C.ink);
-s1.addText('Each row moves one dial and leaves the rest at baseline. Production GPUs on the right.', {
-  x:CX[2]+0.24, y:CY+0.52, w:CW-0.48, h:0.42, isTextBox:true, margin:0,
-  fontFace:F.b, fontSize:9.5, color:C.ink3, lineSpacing:12});
-
 const PAR = [
-  ['Baseline as modelled',     1.0,  10, true],
-  ['RFO context 6k → 24k',     3.5,  18, false],
-  ['Compression misses 3×',    2.8,  16, false],
-  ['Every incident gets RFO',  2.6,  16, false],
-  ['Agent loop 3 → 6 turns',   1.9,  14, false],
-  ['Chat as primary UI',       1.4,  12, false],
-  ['Verbose RFO 400 → 1,500',  1.2,  10, false],
-  ['Lean: P1/P2 only',         0.4,   8, false],
+  ['RFO context, tokens',   '6,000',  '9,640',  1.57, true],
+  ['Incidents per day',     '35,000', '54,900', 1.57, false],
+  ['Share earning an RFO',  '35%',    '55%',    1.57, false],
+  ['Agent turns per RFO',   '3',      '4.7',    1.57, false],
+];
+const SCEN = [
+  ['Every incident gets RFO',   '2.63×', '5 GPU', false],
+  ['Compression misses 3×',     '2.75×', '5 GPU', false],
+  ['RFO context 6k → 24k',      '3.47×', '5 GPU', false],
+  ['Agent loop 3 → 6 turns',    '2.00×', '4 GPU', false],
+  ['Verbose RFO output',       '1.17×', 'fits',  true],
+  ['Chat becomes primary UI',   '1.00×', 'fits',  true],
 ];
 const BX = CX[2]+0.24, BW = CW-0.48;
-const labW = 1.72, barX = BX+1.78, barW = 0.86, xX = BX+2.70, gX = BX+3.10, MAXX = 3.5;
-s1.addText('× DEMAND', {x:barX, y:CY+1.02, w:1.3, h:0.18, isTextBox:true, margin:0,
-  fontFace:F.d, fontSize:7.5, bold:true, color:C.ink3, charSpacing:0.8});
-s1.addText('GPU', {x:gX, y:CY+1.02, w:BW-(gX-BX), h:0.18, isTextBox:true, margin:0,
-  fontFace:F.d, fontSize:7.5, bold:true, color:C.ink3, charSpacing:0.8, align:'right'});
+s1.addText('Three GPUs hold until one of these crosses. Each moves alone, N+1 kept.', {
+  x:BX, y:CY+0.52, w:BW, h:0.42, isTextBox:true, margin:0,
+  fontFace:F.b, fontSize:9.5, color:C.ink3, lineSpacing:12});
 
-let py = CY + 1.26;
-PAR.forEach(([t, x, g, base]) => {
-  s1.addText(t, {x:BX, y:py-0.02, w:labW, h:0.24, isTextBox:true, margin:0,
-    fontFace:F.b, fontSize:9.5, bold:base, color: base ? C.ink : C.ink2});
-  s1.addShape(p.ShapeType.rect, {x:barX, y:py+0.055, w:barW, h:0.11,
-    fill:{color:C.sunk}, line:{type:'none'}});
-  s1.addShape(p.ShapeType.rect, {x:barX, y:py+0.055, w:Math.max(0.03, barW*(x/MAXX)), h:0.11,
-    fill:{color: base ? C.teal : C.rust}, line:{type:'none'}});
-  s1.addText(x.toFixed(1)+'×', {x:xX, y:py-0.02, w:0.38, h:0.24, isTextBox:true,
-    margin:0, fontFace:F.m, fontSize:8.5, color:C.ink3});
-  s1.addText(String(g), {x:gX, y:py-0.02, w:BW-(gX-BX), h:0.24, isTextBox:true, margin:0,
-    fontFace:F.m, fontSize:10, bold:true, color: base ? C.teal : C.ink, align:'right'});
-  py += 0.335;
+const c1=BX, c2=BX+1.62, c3=BX+2.42;
+s1.addText('MODELLED', {x:c2, y:CY+0.98, w:0.78, h:0.18, isTextBox:true, margin:0,
+  fontFace:F.d, fontSize:7.5, bold:true, color:C.ink3, charSpacing:0.8, align:'right'});
+s1.addText('CEILING', {x:c3, y:CY+0.98, w:BW-(c3-BX), h:0.18, isTextBox:true, margin:0,
+  fontFace:F.d, fontSize:7.5, bold:true, color:C.rust, charSpacing:0.8, align:'right'});
+let py = CY + 1.22;
+PAR.forEach(([t, mod, ceil, h, hot]) => {
+  s1.addText(t, {x:c1, y:py, w:1.58, h:0.24, isTextBox:true, margin:0,
+    fontFace:F.b, fontSize:9.5, bold:hot, color: hot ? C.ink : C.ink2});
+  s1.addText(mod, {x:c2, y:py, w:0.78, h:0.24, isTextBox:true, margin:0,
+    fontFace:F.m, fontSize:9, color:C.ink3, align:'right'});
+  s1.addText(ceil, {x:c3, y:py, w:BW-(c3-BX), h:0.24, isTextBox:true, margin:0,
+    fontFace:F.m, fontSize:10, bold:true, color: hot ? C.rust : C.ink, align:'right'});
+  py += 0.28;
 });
 
-s1.addShape(p.ShapeType.roundRect, {x:BX, y:CY+4.10, w:BW, h:1.17, rectRadius:0.04,
+s1.addText('THE SENSITIVITY CASES, RE-RUN AGAINST 3 GPUs', {
+  x:BX, y:py+0.14, w:BW, h:0.2, isTextBox:true, margin:0,
+  fontFace:F.d, fontSize:7.5, bold:true, color:C.ink3, charSpacing:0.8});
+py += 0.40;
+SCEN.forEach(([t, mult, need, ok]) => {
+  s1.addShape(p.ShapeType.rect, {x:BX, y:py+0.075, w:0.07, h:0.07,
+    fill:{color: ok ? C.teal : C.rust}, line:{type:'none'}});
+  s1.addText(t, {x:BX+0.18, y:py, w:1.62, h:0.24, isTextBox:true, margin:0,
+    fontFace:F.b, fontSize:9.5, color:C.ink2});
+  s1.addText(mult, {x:c2, y:py, w:0.78, h:0.24, isTextBox:true, margin:0,
+    fontFace:F.m, fontSize:9, color:C.ink3, align:'right'});
+  s1.addText(need, {x:c3, y:py, w:BW-(c3-BX), h:0.24, isTextBox:true, margin:0,
+    fontFace:F.m, fontSize:9.5, bold:true, color: ok ? C.teal : C.rust, align:'right'});
+  py += 0.26;
+});
+
+s1.addShape(p.ShapeType.roundRect, {x:BX, y:CY+4.38, w:BW, h:1.05, rectRadius:0.04,
   fill:{color:C.sunk}, line:{type:'none'}});
-s1.addText('Context length is the dominant lever', {
-  x:BX+0.14, y:CY+4.20, w:BW-0.28, h:0.22, isTextBox:true, margin:0,
+s1.addText('The context budget is now load-bearing', {
+  x:BX+0.14, y:CY+4.48, w:BW-0.28, h:0.22, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:10, bold:true, color:C.rust});
-s1.addText('Prompt size moves total demand more than incident count does. A per-agent context budget therefore belongs in the LLD as a hard constraint, not as a tuning knob adjusted in production.', {
-  x:BX+0.14, y:CY+4.44, w:BW-0.28, h:0.78, isTextBox:true, margin:0,
+s1.addText('At 14 GPUs a context cap was good practice. At three it is the control: a hard limit in code, with an alert at 8,000 tokens.', {
+  x:BX+0.14, y:CY+4.72, w:BW-0.28, h:0.64, isTextBox:true, margin:0,
   fontFace:F.b, fontSize:9.5, color:C.ink2, lineSpacing:12});
 
-s1.addNotes('Left: what is fixed by the SoW versus what we assumed. Right: the assumptions ranked by how much they move the answer. Middle: the six engineering decisions. The point of the slide is that capacity was measured and only demand was assumed.');
+s1.addNotes('Left: what the SoW fixes versus what we assumed. Middle: the six decisions the 3-GPU constraint forced. Right: the ceiling on each assumption before a fourth GPU is needed, and the sensitivity cases re-run against three. The point is that capacity was measured and only demand was assumed.');
 
 /* ================================================================ SLIDE 2 */
 const s2 = p.addSlide();
 s2.background = {color: C.dark};
 
-s2.addText('The answer, and what it rests on', {
+s2.addText('Three H100 — and what it costs', {
   x:M, y:0.36, w:USE, h:0.5, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:29, bold:true, color:C.dink, charSpacing:-0.4});
 s2.addText([
-  {text:'11-point GuideLLM sweep', options:{color:C.dteal, bold:true}},
-  {text:'   ·   two pools × concurrency 1–32   ·   capacity taken at the SLO-passing knee, then derated 30%',
+  {text:'Peak-hour demand measures 1.37 GPU of work', options:{color:C.dteal, bold:true}},
+  {text:'   ·   three carries it with N+1   ·   two independent methods agree to within 3.8%',
    options:{color:C.dink3}},
 ], {x:M, y:0.88, w:USE, h:0.28, isTextBox:true, margin:0, fontFace:F.b, fontSize:11.5});
 
 /* --- stat row --- */
 const ST = [
-  ['14', '× H100 80GB', 'GPU fleet', '10 production over 2 sites,\n2 non-prod, 2 training', true],
-  ['488', 'vCPU', 'CPU platform', '4,768 GB RAM ≈ 7 nodes,\nRAM-bound not CPU-bound', false],
-  ['43.9', 'TB', 'Storage', '9.2 TB logical ×3 replication\n×1.6 growth, NVMe', false],
-  ['268', 'M tok/day', 'Token demand', '98B/year — two of the\nfive agents use tokens', false],
+  ['3', '× H100 80GB', 'GPU fleet', 'One shared pool, single site.\nN+1 across the platform.', true],
+  ['46', '% at peak', 'Utilisation', '69% with one GPU down;\n19% at average load.', false],
+  ['1.6', '× headroom', 'Growth', 'RFO demand can grow 57%\nbefore a 4th GPU.', false],
+  ['308', 'k $/year', 'Saving', 'vs the 14-GPU two-site\ndesign, on GPU alone.', false],
 ];
 const SW = (USE - 0.45)/4;
 ST.forEach(([n, u, l, s, hero], i) => {
@@ -206,11 +221,11 @@ ST.forEach(([n, u, l, s, hero], i) => {
 s2.addText('THE DIVISION', {x:M, y:3.10, w:3, h:0.2, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:8.5, bold:true, color:C.dink3, charSpacing:1});
 const CHAIN = [
-  ['Peak-hour demand', '7,458 tok/s', 'both pools, 2.4× the daily mean'],
-  ['Measured capacity', '6,066 / 3,797', 'tok/s per H100 at the SLO knee'],
-  ['After 30% headroom', '4,246 / 2,658', 'usable tok/s per H100'],
-  ['GPUs actually serving', '1.9 → 3', 'peak-hour requirement'],
-  ['Plus N+1, 2 sites, non-prod', '14 × H100', 'HA and DR, not token volume'],
+  ['Peak-hour demand', '7,458 tok/s', 'both classes, 2.4× the daily mean'],
+  ['Shared-pool capacity', '5,433 tok/s', 'measured, mixed traffic, per H100'],
+  ['Work required', '1.37 GPU', 'additive method agrees to 3.8%'],
+  ['Survives one failure', '68.6%', 'of capacity on the 2 that remain'],
+  ['Fleet', '3 × H100', 'the smallest N+1 that holds'],
 ];
 const CHW = (USE - 4*0.26)/5;
 CHAIN.forEach(([t, v, s], i) => {
@@ -230,34 +245,34 @@ CHAIN.forEach(([t, v, s], i) => {
 
 /* --- three findings --- */
 const FIND = [
-  ['The LLM tier is the small part',
-   'Peak demand needs about two GPUs of serving; average utilisation of the serving fleet is near 20%. The fleet is sized by peak and by HA, never by average load.',
+  ['Three is an HA number, not throughput',
+   'Peak needs 1.37 GPU, so two would meet the SLO. Three is the smallest fleet where a GPU can fail during the busiest hour and the platform still holds. That is the whole case for the third card.',
    C.dteal],
-  ['The platform is floor-bound',
-   '11 of 13 components are sized by their operational floor — JVM heap, compaction, quorum — not by Vi’s event rate. Halving alarm volume does not make this cheaper; only removing components does.',
+  ['Chat was only 0.24 GPU of load',
+   'Two pools was the right architecture and the wrong sizing. Same model, one deployment, priority scheduling. The one thing arithmetic cannot settle — interactive TTFT under long prefills — is a day on a rented card.',
    C.dteal],
-  ['On-prem does not pay for itself',
-   '10 H100 ≈ $280k/yr against ≈$59k/yr for the same tokens hosted; break-even is ~4.8× this volume. We build private because the data cannot leave — saying so is what keeps the business case credible.',
+  ['Single site is the one real loss',
+   'Everything else dropped was over-provisioning. The manual NOC process covers a DC outage today, but that expires when headcount comes out — so fund site 2 before the reduction lands, not after.',
    C.drust],
 ];
 const FW = (USE - 0.5)/3;
 FIND.forEach(([t, b, c], i) => {
   const x = M + i*(FW+0.25);
-  card(s2, x, 4.62, FW, 1.62, true);
+  card(s2, x, 4.62, FW, 1.86, true);
   sq(s2, x+0.20, 4.87, c);
   s2.addText(t, {x:x+0.36, y:4.78, w:FW-0.56, h:0.24, isTextBox:true, margin:0,
     fontFace:F.d, fontSize:12, bold:true, color:C.dink});
-  s2.addText(b, {x:x+0.20, y:5.10, w:FW-0.4, h:1.06, isTextBox:true, margin:0,
+  s2.addText(b, {x:x+0.20, y:5.10, w:FW-0.4, h:1.30, isTextBox:true, margin:0,
     fontFace:F.b, fontSize:10, color:C.dink2, lineSpacing:13.5});
 });
 
 s2.addText([
   {text:'Method:  ', options:{bold:true, color:C.dink}},
-  {text:'GuideLLM 0.7.3 measured request rate, latency, TTFT and ITL end to end; per-point TTFT/ITL were pinned to published gpt-oss-120b + vLLM figures for one H100 80GB, since the modelling host has no GPU. Pointing --backend at a live vLLM endpoint re-derives every number above.',
+  {text:'16 GuideLLM operating points across three workload profiles, including a shared-pool run driven from two simultaneous data sources so the scheduler sees real mixed traffic. Per-point TTFT/ITL were pinned to published gpt-oss-120b + vLLM figures for one H100 80GB, since the modelling host has no GPU. Pointing --backend at a live vLLM endpoint re-derives every number above.',
    options:{color:C.dink2}},
-], {x:M, y:6.50, w:USE, h:0.42, isTextBox:true, margin:0, fontFace:F.b, fontSize:8.5, lineSpacing:11});
+], {x:M, y:6.70, w:USE, h:0.42, isTextBox:true, margin:0, fontFace:F.b, fontSize:8.5, lineSpacing:11});
 
-s2.addNotes('Top row is the answer. The chain shows the actual arithmetic: peak demand over derated measured capacity gives about two serving GPUs; everything else is HA, DR, eval and training. The three findings are what to lead with in a review.');
+s2.addNotes('Top row is the answer. The chain is the arithmetic: peak demand over measured shared-pool capacity is 1.37 GPU; three is what N+1 costs. Lead with the three findings — especially the last one, since single site is the only genuine risk in the descope and it has an expiry date.');
 
 p.writeFile({fileName:'/home/user/Claude/deck/Vi-AI-NOC-Sizing.pptx'})
  .then(f => console.log('wrote', f));
