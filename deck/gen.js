@@ -36,13 +36,13 @@ const head = (s,x,y,w,t,c) => s.addText(t, {
 const s1 = p.addSlide();
 s1.background = {color: C.paper};
 
-s1.addText('How three GPUs was arrived at', {
+s1.addText('Sizing FM + Change Management', {
   x:M, y:0.36, w:USE, h:0.5, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:29, bold:true, color:C.ink, charSpacing:-0.4,
 });
 s1.addText([
-  {text:'Vi AI-NOC · RAN fault management', options:{color:C.teal, bold:true}},
-  {text:'   ·   ~2M cells, ~10M alarms/day   ·   16 GuideLLM operating points; demand derived from the SoW',
+  {text:'Vi Network AI Platform', options:{color:C.teal, bold:true}},
+  {text:'   ·   per the IBM SNOC TSD (20-08-26)   ·   15M alarms/day, H200 141GB, 3 model tiers',
    options:{color:C.ink3}},
 ], {x:M, y:0.88, w:USE, h:0.28, isTextBox:true, margin:0, fontFace:F.b, fontSize:11.5});
 
@@ -54,37 +54,39 @@ card(s1, CX[0], CY, CW, CH);
 sq(s1, CX[0]+0.24, CY+0.28, C.teal);
 head(s1, CX[0]+0.40, CY+0.20, CW-0.6, 'ASSUMPTIONS', C.ink);
 
-s1.addText('FIXED — from the SoW', {
+s1.addText('FIXED — stated in the TSD', {
   x:CX[0]+0.24, y:CY+0.56, w:CW-0.48, h:0.2, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:8.5, bold:true, color:C.teal, charSpacing:0.9});
 s1.addText([
-  {text:'~2M cells · ~10M alarms/day · 70% RAN-linked', options:{bullet:true, breakLine:true}},
-  {text:'KPIs ≈285 GB/day · logs ≈30 GB/day', options:{bullet:true, breakLine:true}},
-  {text:'~9.2 TB logical, 2-week hot window', options:{bullet:true, breakLine:true}},
-  {text:'Private / on-prem LLM endpoints only', options:{bullet:true, breakLine:true}},
-  {text:'Human approval gate — no network change', options:{bullet:true}},
-], {x:CX[0]+0.24, y:CY+0.80, w:CW-0.48, h:1.45, isTextBox:true, margin:0,
-    fontFace:F.b, fontSize:10.5, color:C.ink2, paraSpaceAfter:4, lineSpacing:14});
+  {text:'15M alarms/day, 1M-node topology graph  (§12)', options:{bullet:true, breakLine:true}},
+  {text:'52k batch / 5 min; 500k burst in <180 s  (§12)', options:{bullet:true, breakLine:true}},
+  {text:'H200 141GB, FP8 / MXFP4 on vLLM  (§12, §3.7)', options:{bullet:true, breakLine:true}},
+  {text:'6 model tiers incl. VLM + E5  (§3.4.6, §3.7)', options:{bullet:true, breakLine:true}},
+  {text:'8 CHM agents, GUJ first → pan-India  (§6.8–6.13)', options:{bullet:true, breakLine:true}},
+  {text:'Release docs quarterly / bi-annual  (§5.1)', options:{bullet:true, breakLine:true}},
+  {text:'Max 5 concurrent changes per circle  (§6.11)', options:{bullet:true}},
+], {x:CX[0]+0.24, y:CY+0.80, w:CW-0.48, h:2.10, isTextBox:true, margin:0,
+    fontFace:F.b, fontSize:10, color:C.ink2, paraSpaceAfter:3, lineSpacing:13});
 
 s1.addText('ASSUMED — planning values to validate', {
-  x:CX[0]+0.24, y:CY+2.38, w:CW-0.48, h:0.2, isTextBox:true, margin:0,
+  x:CX[0]+0.24, y:CY+2.98, w:CW-0.48, h:0.2, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:8.5, bold:true, color:C.rust, charSpacing:0.9});
 s1.addText([
-  {text:'90% dedup / flap suppression → 700k/day', options:{bullet:true, breakLine:true}},
-  {text:'20 events per incident → 35k UAI/day', options:{bullet:true, breakLine:true}},
+  {text:'70% RAN-linked → 52.5k incidents/day', options:{bullet:true, breakLine:true}},
   {text:'35% of incidents earn a GenAI RFO', options:{bullet:true, breakLine:true}},
   {text:'RFO = 3 turns × 6k in / 400 out tokens', options:{bullet:true, breakLine:true}},
-  {text:'Peak hour = 10% of the day → 2.4×', options:{bullet:true, breakLine:true}},
-  {text:'8k tickets/day written to HPSM', options:{bullet:true}},
-], {x:CX[0]+0.24, y:CY+2.62, w:CW-0.48, h:1.75, isTextBox:true, margin:0,
-    fontFace:F.b, fontSize:10.5, color:C.ink2, paraSpaceAfter:4, lineSpacing:14});
+  {text:'CHM: 100 CRs/day GUJ → 1,250 pan-India', options:{bullet:true, breakLine:true}},
+  {text:'Release drop = 12 docs GUJ → 150 national', options:{bullet:true, breakLine:true}},
+  {text:'Peak hour = 10% of the day → 2.4×', options:{bullet:true}},
+], {x:CX[0]+0.24, y:CY+3.22, w:CW-0.48, h:1.40, isTextBox:true, margin:0,
+    fontFace:F.b, fontSize:10, color:C.ink2, paraSpaceAfter:3, lineSpacing:13});
 
-s1.addShape(p.ShapeType.roundRect, {x:CX[0]+0.24, y:CY+4.55, w:CW-0.48, h:0.72,
+s1.addShape(p.ShapeType.roundRect, {x:CX[0]+0.24, y:CY+4.55, w:CW-0.48, h:0.78,
   rectRadius:0.04, fill:{color:C.sunk}, line:{type:'none'}});
 s1.addText([
-  {text:'Every assumed value is a dial. ', options:{bold:true, color:C.ink}},
-  {text:'None of them changes the measured capacity — only how much of it we need.', options:{color:C.ink2}},
-], {x:CX[0]+0.38, y:CY+4.64, w:CW-0.76, h:0.55, isTextBox:true, margin:0,
+  {text:'Alarms moved 10M → 15M/day. ', options:{bold:true, color:C.ink}},
+  {text:'The TSD supersedes the August one-slide. That +50% is what pushes the heavy tier to 2.06 GPU.', options:{color:C.ink2}},
+], {x:CX[0]+0.38, y:CY+4.64, w:CW-0.76, h:0.62, isTextBox:true, margin:0,
     fontFace:F.b, fontSize:10, lineSpacing:13});
 
 /* ---- col 2 : decision points ---- */
@@ -93,18 +95,18 @@ sq(s1, CX[1]+0.24, CY+0.28, C.teal);
 head(s1, CX[1]+0.40, CY+0.20, CW-0.6, 'DECISION POINTS', C.ink);
 
 const DEC = [
-  ['One shared pool, not two',
-   'Chat is latency-shaped but only 0.24 GPU of load. Same model, one deployment, priority scheduling.', 0.50],
-  ['Size on goodput, not peak throughput',
-   'Capacity = throughput at the last concurrency whose p95 meets the SLO. RFO: ≤30 s. Chat: TTFT ≤1.5 s, ITL ≤25 ms.', 0.50],
-  ['Three, because of N+1',
-   'Peak needs 1.37 GPU. Two would meet the SLO; three is the smallest fleet where a GPU can fail at peak hour and still hold.', 0.50],
-  ['Model must fit a single GPU',
-   '120B MoE at MXFP4 ≈ 62 GB — no TP, failure domain of one GPU, and 21–30 concurrent 6.4k requests of KV headroom.', 0.50],
-  ['Single site, for now',
-   'The one real loss. Manual NOC process is the fallback — but that expires when headcount comes out, so fund site 2 before then.', 0.50],
-  ['Measure the denominator',
-   '16-point GuideLLM sweep, including a mixed-traffic run that validates the shared pool to within 3.8%.', 0.34],
+  ['Route by tier, not by agent',
+   'The TSD already tiers: 120b for reasoning, Gemma for extraction, Llama 8B for MOPs. Size each, then add fractions.', 0.50],
+  ['One SLO gate per tier',
+   'Heavy: latency ≤30 s. Fast: TTFT ≤1.5 s, ITL ≤25 ms. MOP: ≤120 s — batch, it only has to land in the change window.', 0.50],
+  ['Size for the target, not phase 1',
+   'FM is pan-India from day one; CHM is GUJ first, pan-India after. The pool is bought once, so it is sized on the target state.', 0.50],
+  ['Treat MOP generation as a burst',
+   'Release docs are quarterly (§5.1): 150 docs → 2,250 MOPs in one window. A daily mean hides the only CHM spike.', 0.50],
+  ['Co-locate E5, do not dedicate it',
+   'A 0.7 GB encoder at 0.03% utilisation does not need a 141 GB card. Freeing it makes all four cards heavy-capable.', 0.50],
+  ['Measure on H200, not H100',
+   '4.8 TB/s vs 3.35 — decode is bandwidth-bound, so ITL improves ~1.43×. Capacity is 7,008 tok/s, not 6,066.', 0.50],
 ];
 let dy = CY + 0.58;
 DEC.forEach(([t, sub, sh], i) => {
@@ -114,7 +116,7 @@ DEC.forEach(([t, sub, sh], i) => {
     fontFace:F.d, fontSize:11, bold:true, color:C.ink});
   s1.addText(sub, {x:CX[1]+0.52, y:dy+0.21, w:CW-0.78, h:sh, isTextBox:true, margin:0,
     fontFace:F.b, fontSize:9.5, color:C.ink3, lineSpacing:12});
-  dy += 0.21 + sh + 0.16;
+  dy += 0.21 + sh + 0.12;
 });
 
 /* ---- col 3 : parameters ---- */
@@ -122,86 +124,92 @@ card(s1, CX[2], CY, CW, CH);
 sq(s1, CX[2]+0.24, CY+0.28, C.rust);
 head(s1, CX[2]+0.40, CY+0.20, CW-0.6, 'PARAMETERS THAT MOVE IT', C.ink);
 const PAR = [
-  ['RFO context, tokens',   '6,000',  '9,640',  1.57, true],
-  ['Incidents per day',     '35,000', '54,900', 1.57, false],
-  ['Share earning an RFO',  '35%',    '55%',    1.57, false],
-  ['Agent turns per RFO',   '3',      '4.7',    1.57, false],
+  ['heavy · gpt-oss-120b', '6k/400',  '7,008',  '2.06', true],
+  ['fast · Gemma 4 26B',   '1.5k/200','20,936', '0.16', false],
+  ['mop · Llama 3.1 8B',   '12k/2.5k','7,733',  '0.17', false],
 ];
 const SCEN = [
-  ['Every incident gets RFO',   '2.63×', '5 GPU', false],
-  ['Compression misses 3×',     '2.75×', '5 GPU', false],
-  ['RFO context 6k → 24k',      '3.47×', '5 GPU', false],
-  ['Agent loop 3 → 6 turns',    '2.00×', '4 GPU', false],
-  ['Verbose RFO output',       '1.17×', 'fits',  true],
-  ['Chat becomes primary UI',   '1.00×', 'fits',  true],
+  ['FM · pan-India',        '398M', '82%', false],
+  ['CHM · pan-India',        '86M', '18%', true],
+  ['CHM · Gujarat only',    '7.3M', '1.8%', true],
 ];
 const BX = CX[2]+0.24, BW = CW-0.48;
-s1.addText('Three GPUs hold until one of these crosses. Each moves alone, N+1 kept.', {
+s1.addText('Measured on one H200 141GB, gated per tier. GPU column is what pan-India peak demand needs.', {
   x:BX, y:CY+0.52, w:BW, h:0.42, isTextBox:true, margin:0,
   fontFace:F.b, fontSize:9.5, color:C.ink3, lineSpacing:12});
 
-const c1=BX, c2=BX+1.62, c3=BX+2.42;
-s1.addText('MODELLED', {x:c2, y:CY+0.98, w:0.78, h:0.18, isTextBox:true, margin:0,
+const c1=BX, c2=BX+1.42, c3=BX+2.12, c4=BX+2.92;
+s1.addText('SHAPE',  {x:c2, y:CY+0.98, w:0.66, h:0.18, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:7.5, bold:true, color:C.ink3, charSpacing:0.8, align:'right'});
-s1.addText('CEILING', {x:c3, y:CY+0.98, w:BW-(c3-BX), h:0.18, isTextBox:true, margin:0,
+s1.addText('TOK/S',  {x:c3, y:CY+0.98, w:0.76, h:0.18, isTextBox:true, margin:0,
+  fontFace:F.d, fontSize:7.5, bold:true, color:C.ink3, charSpacing:0.8, align:'right'});
+s1.addText('GPU',    {x:c4, y:CY+0.98, w:BW-(c4-BX), h:0.18, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:7.5, bold:true, color:C.rust, charSpacing:0.8, align:'right'});
 let py = CY + 1.22;
-PAR.forEach(([t, mod, ceil, h, hot]) => {
-  s1.addText(t, {x:c1, y:py, w:1.58, h:0.24, isTextBox:true, margin:0,
+PAR.forEach(([t, shape, tok, gpu, hot]) => {
+  s1.addText(t, {x:c1, y:py, w:1.38, h:0.24, isTextBox:true, margin:0,
     fontFace:F.b, fontSize:9.5, bold:hot, color: hot ? C.ink : C.ink2});
-  s1.addText(mod, {x:c2, y:py, w:0.78, h:0.24, isTextBox:true, margin:0,
-    fontFace:F.m, fontSize:9, color:C.ink3, align:'right'});
-  s1.addText(ceil, {x:c3, y:py, w:BW-(c3-BX), h:0.24, isTextBox:true, margin:0,
+  s1.addText(shape, {x:c2, y:py, w:0.66, h:0.24, isTextBox:true, margin:0,
+    fontFace:F.m, fontSize:8.5, color:C.ink3, align:'right'});
+  s1.addText(tok, {x:c3, y:py, w:0.76, h:0.24, isTextBox:true, margin:0,
+    fontFace:F.m, fontSize:9.5, color:C.ink2, align:'right'});
+  s1.addText(gpu, {x:c4, y:py, w:BW-(c4-BX), h:0.24, isTextBox:true, margin:0,
     fontFace:F.m, fontSize:10, bold:true, color: hot ? C.rust : C.ink, align:'right'});
+  py += 0.30;
+});
+s1.addShape(p.ShapeType.line, {x:BX, y:py+0.06, w:BW, h:0,
+  line:{color:C.rule, width:0.75}});
+s1.addText('TOTAL at pan-India peak', {x:c1, y:py+0.12, w:2.4, h:0.24, isTextBox:true,
+  margin:0, fontFace:F.b, fontSize:9.5, bold:true, color:C.ink});
+s1.addText('2.40', {x:c4, y:py+0.12, w:BW-(c4-BX), h:0.24, isTextBox:true, margin:0,
+  fontFace:F.m, fontSize:10, bold:true, color:C.teal, align:'right'});
+py += 0.52;
+
+s1.addText('WHERE THE TOKENS COME FROM', {x:BX, y:py+0.10, w:BW, h:0.2, isTextBox:true,
+  margin:0, fontFace:F.d, fontSize:7.5, bold:true, color:C.ink3, charSpacing:0.8});
+py += 0.36;
+SCEN.forEach(([t, tok, pct, isChm]) => {
+  s1.addShape(p.ShapeType.rect, {x:BX, y:py+0.075, w:0.07, h:0.07,
+    fill:{color: isChm ? C.rust : C.teal}, line:{type:'none'}});
+  s1.addText(t, {x:BX+0.18, y:py, w:1.9, h:0.24, isTextBox:true, margin:0,
+    fontFace:F.b, fontSize:9.5, color:C.ink2});
+  s1.addText(tok, {x:c3, y:py, w:0.76, h:0.24, isTextBox:true, margin:0,
+    fontFace:F.m, fontSize:9, color:C.ink3, align:'right'});
+  s1.addText(pct, {x:c4, y:py, w:BW-(c4-BX), h:0.24, isTextBox:true, margin:0,
+    fontFace:F.m, fontSize:9.5, bold:true, color: isChm ? C.rust : C.ink, align:'right'});
   py += 0.28;
 });
 
-s1.addText('THE SENSITIVITY CASES, RE-RUN AGAINST 3 GPUs', {
-  x:BX, y:py+0.14, w:BW, h:0.2, isTextBox:true, margin:0,
-  fontFace:F.d, fontSize:7.5, bold:true, color:C.ink3, charSpacing:0.8});
-py += 0.40;
-SCEN.forEach(([t, mult, need, ok]) => {
-  s1.addShape(p.ShapeType.rect, {x:BX, y:py+0.075, w:0.07, h:0.07,
-    fill:{color: ok ? C.teal : C.rust}, line:{type:'none'}});
-  s1.addText(t, {x:BX+0.18, y:py, w:1.62, h:0.24, isTextBox:true, margin:0,
-    fontFace:F.b, fontSize:9.5, color:C.ink2});
-  s1.addText(mult, {x:c2, y:py, w:0.78, h:0.24, isTextBox:true, margin:0,
-    fontFace:F.m, fontSize:9, color:C.ink3, align:'right'});
-  s1.addText(need, {x:c3, y:py, w:BW-(c3-BX), h:0.24, isTextBox:true, margin:0,
-    fontFace:F.m, fontSize:9.5, bold:true, color: ok ? C.teal : C.rust, align:'right'});
-  py += 0.26;
-});
-
-s1.addShape(p.ShapeType.roundRect, {x:BX, y:CY+4.38, w:BW, h:1.05, rectRadius:0.04,
+s1.addShape(p.ShapeType.roundRect, {x:BX, y:CY+4.42, w:BW, h:1.00, rectRadius:0.04,
   fill:{color:C.sunk}, line:{type:'none'}});
-s1.addText('The context budget is now load-bearing', {
-  x:BX+0.14, y:CY+4.48, w:BW-0.28, h:0.22, isTextBox:true, margin:0,
+s1.addText('CHM does not move the number', {
+  x:BX+0.14, y:CY+4.52, w:BW-0.28, h:0.22, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:10, bold:true, color:C.rust});
-s1.addText('At 14 GPUs a context cap was good practice. At three it is the control: a hard limit in code, with an alert at 8,000 tokens.', {
-  x:BX+0.14, y:CY+4.72, w:BW-0.28, h:0.64, isTextBox:true, margin:0,
+s1.addText('Even pan-India it is 18% of tokens and 0.33 of a GPU. The alarm tier at 15M/day sets the fleet; CHM adds model tiers, not cards.', {
+  x:BX+0.14, y:CY+4.76, w:BW-0.28, h:0.60, isTextBox:true, margin:0,
   fontFace:F.b, fontSize:9.5, color:C.ink2, lineSpacing:12});
 
-s1.addNotes('Left: what the SoW fixes versus what we assumed. Middle: the six decisions the 3-GPU constraint forced. Right: the ceiling on each assumption before a fourth GPU is needed, and the sensitivity cases re-run against three. The point is that capacity was measured and only demand was assumed.');
+s1.addNotes('Left: what the IBM TSD fixes versus what we assumed — note alarms moved from 10M to 15M/day, which is what drives the heavy tier. Middle: the six sizing decisions. Right: measured capacity per model tier on H200, and where the tokens actually come from. The headline of this slide is that Change Management adds model tiers, not GPUs.');
 
 /* ================================================================ SLIDE 2 */
 const s2 = p.addSlide();
 s2.background = {color: C.dark};
 
-s2.addText('Three H100 — and what it costs', {
+s2.addText('The TSD pool: right total, wrong split', {
   x:M, y:0.36, w:USE, h:0.5, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:29, bold:true, color:C.dink, charSpacing:-0.4});
 s2.addText([
-  {text:'Peak-hour demand measures 1.37 GPU of work', options:{color:C.dteal, bold:true}},
-  {text:'   ·   three carries it with N+1   ·   two independent methods agree to within 3.8%',
+  {text:'Measured demand lands on the TSD\u2019s own 4 production H200', options:{color:C.dteal, bold:true}},
+  {text:'   ·   but the heavy tier needs 2.06 of them, so \u201c2 active for HA\u201d has no headroom left',
    options:{color:C.dink3}},
 ], {x:M, y:0.88, w:USE, h:0.28, isTextBox:true, margin:0, fontFace:F.b, fontSize:11.5});
 
 /* --- stat row --- */
 const ST = [
-  ['3', '× H100 80GB', 'GPU fleet', 'One shared pool, single site.\nN+1 across the platform.', true],
-  ['46', '% at peak', 'Utilisation', '69% with one GPU down;\n19% at average load.', false],
-  ['1.6', '× headroom', 'Growth', 'RFO demand can grow 57%\nbefore a 4th GPU.', false],
-  ['308', 'k $/year', 'Saving', 'vs the 14-GPU two-site\ndesign, on GPU alone.', false],
+  ['4', '+1 × H200', 'Production GPU', 'Matches the TSD total.\n3 serving + 1 for N+1.', true],
+  ['2.06', 'of 3 cards', 'Heavy tier', 'gpt-oss-120b alone, at\npan-India peak.', false],
+  ['18', '% of tokens', 'Change Mgmt', 'Pan-India, on a release\nburst day. 0.33 GPU.', false],
+  ['0.03', '% utilised', 'The E5 card', 'A 0.7 GB encoder on a\n141 GB card.', false],
 ];
 const SW = (USE - 0.45)/4;
 ST.forEach(([n, u, l, s, hero], i) => {
@@ -218,14 +226,14 @@ ST.forEach(([n, u, l, s, hero], i) => {
 });
 
 /* --- derivation chain --- */
-s2.addText('THE DIVISION', {x:M, y:3.10, w:3, h:0.2, isTextBox:true, margin:0,
+s2.addText('HA POSTURE AT PAN-INDIA PEAK', {x:M, y:3.10, w:4, h:0.2, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:8.5, bold:true, color:C.dink3, charSpacing:1});
 const CHAIN = [
-  ['Peak-hour demand', '7,458 tok/s', 'both classes, 2.4× the daily mean'],
-  ['Shared-pool capacity', '5,433 tok/s', 'measured, mixed traffic, per H100'],
-  ['Work required', '1.37 GPU', 'additive method agrees to 3.8%'],
-  ['Survives one failure', '68.6%', 'of capacity on the 2 that remain'],
-  ['Fleet', '3 × H100', 'the smallest N+1 that holds'],
+  ['3 cards healthy', '48% of knee', 'comfortable — the normal state'],
+  ['2 active (TSD HA)', '72% of knee', 'meets SLO, 30% headroom spent'],
+  ['1 surviving', '145% of knee', 'SLO breach at peak hour'],
+  ['Free the E5 card', '4 heavy-capable', 'turns 2-at-the-edge into 3-with-margin'],
+  ['Model tiers covered', '2 of 6', 'Gemma, Llama 8B and the VLM have no node'],
 ];
 const CHW = (USE - 4*0.26)/5;
 CHAIN.forEach(([t, v, s], i) => {
@@ -237,7 +245,7 @@ CHAIN.forEach(([t, v, s], i) => {
     fontFace:F.d, fontSize:15, bold:true, color: i===4 ? C.dteal : C.dink});
   s2.addText(s, {x:x+0.16, y:3.97, w:CHW-0.32, h:0.32, isTextBox:true, margin:0,
     fontFace:F.b, fontSize:8, color:C.dink3, lineSpacing:10});
-  if (i < 4) {
+  if (i < 2) {
     s2.addShape(p.ShapeType.rightArrow, {x:x+CHW+0.055, y:3.79, w:0.15, h:0.14,
       fill:{color:C.drust}, line:{type:'none'}});
   }
@@ -245,15 +253,15 @@ CHAIN.forEach(([t, v, s], i) => {
 
 /* --- three findings --- */
 const FIND = [
-  ['Three is an HA number, not throughput',
-   'Peak needs 1.37 GPU, so two would meet the SLO. Three is the smallest fleet where a GPU can fail during the busiest hour and the platform still holds. That is the whole case for the third card.',
+  ['CHM adds tiers, not cards',
+   'Pan-India CHM is 18% of tokens and 0.33 of a GPU. What it really adds is two more model tiers to host — Llama 3.1 8B for MOP generation and heavier use of the Gemma fast tier — neither of which has a node in the §12 pool.',
    C.dteal],
-  ['Chat was only 0.24 GPU of load',
-   'Two pools was the right architecture and the wrong sizing. Same model, one deployment, priority scheduling. The one thing arithmetic cannot settle — interactive TTFT under long prefills — is a day on a rented card.',
-   C.dteal],
-  ['Single site is the one real loss',
-   'Everything else dropped was over-provisioning. The manual NOC process covers a DC outage today, but that expires when headcount comes out — so fund site 2 before the reduction lands, not after.',
+  ['The §12 pool covers 2 of 6 models',
+   'It allocates nodes for gpt-oss-120b and E5. Gemma 4 26B, Gemma 4 E4B, Llama 3.1 8B and the VLM are named elsewhere in the TSD with no allocation. Weights co-reside in 107 of 141 GB — but compute does not.',
    C.drust],
+  ['Reallocate rather than buy more',
+   'E5 runs at 0.03% of one card. Co-locate it with the fast tier and all four cards become heavy-capable — the same spend, but three active at peak instead of two at the edge.',
+   C.dteal],
 ];
 const FW = (USE - 0.5)/3;
 FIND.forEach(([t, b, c], i) => {
@@ -268,11 +276,11 @@ FIND.forEach(([t, b, c], i) => {
 
 s2.addText([
   {text:'Method:  ', options:{bold:true, color:C.dink}},
-  {text:'16 GuideLLM operating points across three workload profiles, including a shared-pool run driven from two simultaneous data sources so the scheduler sees real mixed traffic. Per-point TTFT/ITL were pinned to published gpt-oss-120b + vLLM figures for one H100 80GB, since the modelling host has no GPU. Pointing --backend at a live vLLM endpoint re-derives every number above.',
+  {text:'13 GuideLLM operating points across the three model tiers the TSD names, calibrated to H200 141GB (4.8 TB/s — decode ~1.43\u00d7 an H100, prefill held flat). Volumes are the TSD\u2019s own: 15M alarms/day, 8 CHM agents, Gujarat in phase 1 and pan-India at target. The one thing arithmetic cannot settle is co-resident compute — that needs a run on the real card.',
    options:{color:C.dink2}},
 ], {x:M, y:6.70, w:USE, h:0.42, isTextBox:true, margin:0, fontFace:F.b, fontSize:8.5, lineSpacing:11});
 
-s2.addNotes('Top row is the answer. The chain is the arithmetic: peak demand over measured shared-pool capacity is 1.37 GPU; three is what N+1 costs. Lead with the three findings — especially the last one, since single site is the only genuine risk in the descope and it has an expiry date.');
+s2.addNotes('The total in the TSD is right — 4 production H200 — and my independent measured model lands on the same number. The issue is the split: 3 cards for gpt-oss-120b and 1 dedicated to E5 leaves the heavy tier at 2.06 of 3, so the stated 2-active HA posture has no headroom. Freeing the E5 card fixes it at zero extra cost. Lead with the middle finding in a design review: four of the six model tiers the document describes have no node allocated.');
 
 p.writeFile({fileName:'/home/user/Claude/deck/Vi-AI-NOC-Sizing.pptx'})
  .then(f => console.log('wrote', f));
