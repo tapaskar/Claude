@@ -140,12 +140,12 @@ const SCEN = [
   ['CHM · release burst',    '60M', '13%', true],
 ];
 const BX = CX[2]+0.24, BW = CW-0.48;
-s1.addText('Measured on one H200 141GB, gated per tier. GPU column is what pan-India peak demand needs.', {
+s1.addText('Measured per tier on one H200 141GB. IN / OUT = input / output tokens per request.', {
   x:BX, y:CY+0.52, w:BW, h:0.42, isTextBox:true, margin:0,
   fontFace:F.b, fontSize:9.5, color:C.ink3, lineSpacing:12});
 
 const c1=BX, c2=BX+1.42, c3=BX+2.12, c4=BX+2.92;
-s1.addText('SHAPE',  {x:c2, y:CY+0.98, w:0.66, h:0.18, isTextBox:true, margin:0,
+s1.addText('IN / OUT', {x:c2, y:CY+0.98, w:0.66, h:0.18, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:7.5, bold:true, color:C.ink3, charSpacing:0.8, align:'right'});
 s1.addText('TOK/S',  {x:c3, y:CY+0.98, w:0.76, h:0.18, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:7.5, bold:true, color:C.ink3, charSpacing:0.8, align:'right'});
