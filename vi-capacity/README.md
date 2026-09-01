@@ -13,15 +13,14 @@ Report: `../vi-ainoc-capacity-model.html`
 
 Re-derived against the **IBM SNOC AI Use Cases TSD (20-08-26)**, which supersedes the
 August one-slide: 15M alarms/day (not 10M), **H200 141GB** (not H100 80GB), a six-model
-tiered estate, and the eight Change Management agents. CHM is pan-India at target with
-Gujarat as Phase 1.
+tiered estate, and the eight Change Management agents. Fault Management and Change
+Management are both dimensioned pan-India.
 
 | | |
 |---|---|
 | Production GPU (LLM tiers) | **4 × H200 141GB** — 3 serving + 1 for N+1 |
-| Peak demand, pan-India CHM | 2.40 usable-GPU (heavy 2.06, fast 0.16, mop 0.17) |
-| Peak demand, Gujarat Phase 1 | 2.12 usable-GPU |
-| Change Management share | 18% of tokens pan-India, 0.33 GPU — it adds tiers, not cards |
+| Peak demand | 2.40 usable-GPU (heavy 2.06, fast 0.16, mop 0.17) |
+| Change Management share | 18% of tokens, 0.33 GPU — it adds tiers, not cards |
 | TSD's own pool (§12) | 3 × H200 gpt-oss-120b + 1 × H200 E5, +1 non-prod |
 
 **The total matches; the split does not.** An independent measured model lands on the
@@ -81,7 +80,7 @@ figure in `vi_3gpu.py` is derated by that difference.
 | File | What it does |
 |---|---|
 | `extract_pdf.py` | Pulls text out of the TSD. The image's `cryptography` package is broken and panics rather than raising ImportError, so pypdf's own fallback never fires — this blocks the module so it does. |
-| `vi_demand_v2.py` | **v2** — FM + CHM demand by model tier, at TSD volumes. `PHASE=guj` or `PHASE=national`. Writes `demand_v2_*.json`. |
+| `vi_demand_v2.py` | **v2** — FM + CHM demand by model tier at TSD volumes, both pan-India. Writes `demand_v2.json`. |
 | `sweep_h200.sh` | **v2** — 13-point GuideLLM sweep across the three model tiers, calibrated to H200. Writes `sweep-h200/*.json`. |
 | `vi_fleet_v2.py` | **v2** — capacity per tier, fleet, and the comparison against the TSD's §12 pool. Writes `fleet_v2.json`. |
 | `vi_demand.py` | Alarm funnel → token demand per workload and pool. Writes `demand.json`. |
@@ -93,8 +92,7 @@ figure in `vi_3gpu.py` is derated by that difference.
 | `vi_cpu.py` | Per-component CPU/RAM/storage sizing with operational floors. Writes `cpu.json`. |
 | `vi_sensitivity.py` | Moves each planning assumption, reports the effect on the fleet. Writes `sensitivity.json`. |
 
-Run order (v2): `PHASE=guj vi_demand_v2.py` → `PHASE=national vi_demand_v2.py` →
-`sweep_h200.sh` → `vi_fleet_v2.py`.
+Run order (v2): `vi_demand_v2.py` → `sweep_h200.sh` → `vi_fleet_v2.py`.
 
 Run order (v1, H100 / August one-slide): `vi_demand.py` → `vi_sweep.sh` → `vi_capacity.py`
 → `vi_sweep_shared.sh` → `read_shared.py` → `vi_cpu.py` → `vi_sensitivity.py` → `vi_3gpu.py`.
@@ -152,12 +150,14 @@ Run the sweep before the procurement, and again on every model change.
 **v2 takes its fixed values from the TSD** (marked `[TSD]` in `vi_demand_v2.py`): 15M
 alarms/day and a 1M-node topology graph (§12); 52k batch per 5 minutes with a 500k burst
 to clear in <180 s (§12); H200 141GB on vLLM with FP8/MXFP4 (§12, §3.7); the six-model
-tiering (§3.4.6, §3.7, §6.8); eight CHM agents, Gujarat first (§6.8–6.13); quarterly /
-bi-annual release documents (§5.1); max 5 concurrent changes per circle (§6.11).
+tiering (§3.4.6, §3.7, §6.8); eight CHM agents across Paco, VoLTE and IP (§6.8–6.13);
+quarterly / bi-annual release documents (§5.1); max 5 concurrent changes per circle
+(§6.11).
 
-CHM volumes are `[PLAN]`: 100 CRs/day for Gujarat scaling to 1,250 pan-India (Gujarat
-taken as ~8% of the national network, so ~12.5×, not 22×), and a release drop of 12
-documents for Gujarat / 150 national producing 15 MOPs each inside a 24-hour window.
+CHM volumes are `[PLAN]`: 1,250 change requests/day and 3,750 change items nationally,
+and a release drop of 150 documents producing 15 MOPs each inside a 24-hour window. Note
+the TSD's own agent sections name Gujarat as the initial circle; this model dimensions
+both tracks pan-India because the pool is bought once against the full estate.
 
 v1 volumes were taken from the SoW one-slide data flow (17 Aug): ~2M cells, ~10M raw alarms/day,
 ~70% RAN-linked, KPIs ≈285 GB/day, logs ≈30 GB/day, ~9.2 TB logical storage.

@@ -68,7 +68,7 @@ s1.addText([
   {text:'52k batch / 5 min; 500k burst in <180 s  (§12)', options:{bullet:true, breakLine:true}},
   {text:'H200 141GB, FP8 / MXFP4 on vLLM  (§12, §3.7)', options:{bullet:true, breakLine:true}},
   {text:'6 model tiers incl. VLM + E5  (§3.4.6, §3.7)', options:{bullet:true, breakLine:true}},
-  {text:'8 CHM agents, GUJ first → pan-India  (§6.8–6.13)', options:{bullet:true, breakLine:true}},
+  {text:'8 CHM agents, Paco / VoLTE / IP  (§6.8–6.13)', options:{bullet:true, breakLine:true}},
   {text:'Release docs quarterly / bi-annual  (§5.1)', options:{bullet:true, breakLine:true}},
   {text:'Max 5 concurrent changes per circle  (§6.11)', options:{bullet:true}},
 ], {x:CX[0]+0.24, y:CY+0.80, w:CW-0.48, h:1.60, isTextBox:true, margin:0,
@@ -81,8 +81,8 @@ s1.addText([
   {text:'70% RAN-linked → 52.5k incidents/day', options:{bullet:true, breakLine:true}},
   {text:'35% of incidents earn a GenAI RFO', options:{bullet:true, breakLine:true}},
   {text:'RFO = 3 turns × 6k in / 400 out tokens', options:{bullet:true, breakLine:true}},
-  {text:'CHM: 100 CRs/day GUJ → 1,250 pan-India', options:{bullet:true, breakLine:true}},
-  {text:'Release drop = 12 docs GUJ → 150 national', options:{bullet:true, breakLine:true}},
+  {text:'CHM: 1,250 change requests/day', options:{bullet:true, breakLine:true}},
+  {text:'Release drop = 150 docs → 2,250 MOPs', options:{bullet:true, breakLine:true}},
   {text:'Peak hour = 10% of the day → 2.4×', options:{bullet:true}},
 ], {x:CX[0]+0.24, y:CY+2.76, w:CW-0.48, h:1.40, isTextBox:true, margin:0,
     fontFace:F.b, fontSize:10, color:C.ink2, paraSpaceAfter:3, lineSpacing:13});
@@ -105,8 +105,8 @@ const DEC = [
    'The TSD already tiers: 120b for reasoning, Gemma for extraction, Llama 8B for MOPs. Size each, then add fractions.', 0.50],
   ['One SLO gate per tier',
    'Heavy: latency ≤30 s. Fast: TTFT ≤1.5 s, ITL ≤25 ms. MOP: ≤120 s — batch, it only has to land in the change window.', 0.50],
-  ['Size for the target, not phase 1',
-   'FM is pan-India from day one; CHM is GUJ first, pan-India after. The pool is bought once, so it is sized on the target state.', 0.50],
+  ['Size the estate, not one model',
+   'The TSD names six model tiers but allocates nodes for two. A pool that only fits gpt-oss-120b and E5 has nowhere to put the rest.', 0.50],
   ['Treat MOP generation as a burst',
    'Release docs are quarterly (§5.1): 150 docs → 2,250 MOPs in one window. A daily mean hides the only CHM spike.', 0.50],
   ['Co-locate E5, do not dedicate it',
@@ -135,9 +135,9 @@ const PAR = [
   ['mop · Llama 3.1 8B',   '12k/2.5k','7,733',  '0.17', false],
 ];
 const SCEN = [
-  ['FM · pan-India',        '398M', '82%', false],
-  ['CHM · pan-India',        '86M', '18%', true],
-  ['CHM · Gujarat only',    '7.3M', '1.8%', true],
+  ['FM · alarms → RFO',     '398M', '82%', false],
+  ['CHM · steady state',     '25M',  '5%', true],
+  ['CHM · release burst',    '60M', '13%', true],
 ];
 const BX = CX[2]+0.24, BW = CW-0.48;
 s1.addText('Measured on one H200 141GB, gated per tier. GPU column is what pan-India peak demand needs.', {
@@ -191,11 +191,11 @@ s1.addShape(p.ShapeType.roundRect, {x:BX, y:CY+4.42, w:BW, h:1.00, rectRadius:0.
 s1.addText('CHM does not move the number', {
   x:BX+0.14, y:CY+4.52, w:BW-0.28, h:0.22, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:10, bold:true, color:C.rust});
-s1.addText('Even pan-India it is 18% of tokens and 0.33 of a GPU. The alarm tier at 15M/day sets the fleet; CHM adds model tiers, not cards.', {
+s1.addText('Pan-India it is 18% of tokens and 0.33 of a GPU. The alarm tier at 15M/day sets the fleet; CHM adds model tiers, not cards.', {
   x:BX+0.14, y:CY+4.76, w:BW-0.28, h:0.60, isTextBox:true, margin:0,
   fontFace:F.b, fontSize:9.5, color:C.ink2, lineSpacing:12});
 
-s1.addNotes('Left: what the IBM TSD fixes versus what we assumed — note alarms moved from 10M to 15M/day, which is what drives the heavy tier. Middle: the six sizing decisions. Right: measured capacity per model tier on H200, and where the tokens actually come from. The headline of this slide is that Change Management adds model tiers, not GPUs.');
+s1.addNotes('Left: what the IBM TSD fixes versus what we assumed — note alarms moved from 10M to 15M/day, which is what drives the heavy tier. Middle: the six sizing decisions. Right: measured capacity per model tier on H200, and where the tokens come from — note the CHM release-drop burst is larger than its steady state. The headline of this slide is that Change Management adds model tiers, not GPUs.');
 
 /* ================================================================ SLIDE 2 */
 const s2 = p.addSlide();
@@ -262,7 +262,7 @@ CHAIN.forEach(([t, v, s], i) => {
 /* --- three findings --- */
 const FIND = [
   ['CHM adds tiers, not cards',
-   'Pan-India CHM is 18% of tokens and 0.33 of a GPU. What it really adds is two more model tiers to host — Llama 3.1 8B for MOP generation and heavier use of the Gemma fast tier — neither of which has a node in the §12 pool.',
+   'CHM is 18% of tokens and 0.33 of a GPU. What it really adds is two more model tiers to host — Llama 3.1 8B for MOP generation and heavier use of the Gemma fast tier — neither of which has a node in the §12 pool.',
    C.dteal],
   ['The §12 pool covers 2 of 6 models',
    'It allocates nodes for gpt-oss-120b and E5. Gemma 4 26B, Gemma 4 E4B, Llama 3.1 8B and the VLM are named elsewhere in the TSD with no allocation. Weights co-reside in 107 of 141 GB — but compute does not.',
@@ -284,7 +284,7 @@ FIND.forEach(([t, b, c], i) => {
 
 s2.addText([
   {text:'Method:  ', options:{bold:true, color:C.dink}},
-  {text:'13 GuideLLM operating points across the three model tiers the TSD names, calibrated to H200 141GB (4.8 TB/s — decode ~1.43\u00d7 an H100, prefill held flat). Volumes are the TSD\u2019s own: 15M alarms/day, 8 CHM agents, Gujarat in phase 1 and pan-India at target. The one thing arithmetic cannot settle is co-resident compute — that needs a run on the real card.',
+  {text:'13 GuideLLM operating points across the three model tiers the TSD names, calibrated to H200 141GB (4.8 TB/s — decode ~1.43\u00d7 an H100, prefill held flat). Volumes are the TSD\u2019s own: 15M alarms/day and 8 CHM agents, with FM and Change Management both dimensioned pan-India. The one thing arithmetic cannot settle is co-resident compute — that needs a run on the real card.',
    options:{color:C.dink2}},
 ], {x:M, y:6.70, w:USE, h:0.42, isTextBox:true, margin:0, fontFace:F.b, fontSize:8.5, lineSpacing:11});
 

@@ -8,8 +8,9 @@ The TSD (s12) states a Production GPU Inference Pool of:
   + 1x H200 non-production (dev/test, time-shared, no HA)
 
 This checks that pool against measured capacity at the TSD's own volumes
-(15M alarms/day) with Change Management included, and reports where the pool's
-model coverage does not match the model estate the TSD describes elsewhere.
+(15M alarms/day) with Change Management included, both tracks dimensioned
+pan-India, and reports where the pool's model coverage does not match the model
+estate the TSD describes elsewhere.
 """
 import glob, json, math, os, re
 
@@ -52,7 +53,7 @@ def load_sweep():
 
 def main():
     sweeps = load_sweep()
-    dem = {p: json.load(open(f"demand_v2_{p}.json")) for p in ("guj", "national")}
+    dem = json.load(open("demand_v2.json"))
     knees, out = {}, {}
 
     print("=" * 96)
@@ -77,33 +78,27 @@ def main():
         print(f"  -> knee at concurrency {best['conc']}: {best['tok_s']:,.0f} tok/s per H200")
 
     # ---------------------------------------------------------- fleet ------
-    for phase in ("guj", "national"):
-        d = dem[phase]
-        label = "PHASE 1 - Gujarat CHM" if phase == "guj" else "TARGET - pan-India CHM"
-        print("\n" + "=" * 96)
-        print(f"{label}   (FM is pan-India in both)")
-        print(f"  {'tier':<8}{'peak tok/s':>12}{'knee/GPU':>11}{'usable@70%':>12}"
-              f"{'GPU frac':>10}")
-        total = 0.0
-        detail = {}
-        for tier in ("heavy", "fast", "mop"):
-            if tier not in d["tiers"] or tier not in knees:
-                continue
-            peak = d["tiers"][tier]["peak_tok_s"]
-            knee = knees[tier]["tok_s"]
-            usable = knee * HEADROOM
-            frac = peak / usable
-            total += frac
-            detail[tier] = dict(peak=peak, knee=knee, usable=usable, frac=frac)
-            print(f"  {tier:<8}{peak:>12,.0f}{knee:>11,.0f}{usable:>12,.0f}{frac:>10.3f}")
-        serving = max(1, math.ceil(total))
-        print(f"  {'TOTAL':<8}{'':>12}{'':>11}{'':>12}{total:>10.3f}  -> {serving} GPU serving")
-        print(f"  with N+1: {serving + 1} production GPU for the LLM tiers")
-        out[phase] = dict(detail=detail, total_frac=total, serving=serving,
-                          prod=serving + 1)
+    print("\n" + "=" * 96)
+    print("PAN-INDIA DEMAND OVER MEASURED CAPACITY   (FM + Change Management)")
+    print(f"  {'tier':<8}{'peak tok/s':>12}{'knee/GPU':>11}{'usable@70%':>12}{'GPU frac':>10}")
+    total, detail = 0.0, {}
+    for tier in ("heavy", "fast", "mop"):
+        if tier not in dem["tiers"] or tier not in knees:
+            continue
+        peak = dem["tiers"][tier]["peak_tok_s"]
+        knee = knees[tier]["tok_s"]
+        usable = knee * HEADROOM
+        frac = peak / usable
+        total += frac
+        detail[tier] = dict(peak=peak, knee=knee, usable=usable, frac=frac)
+        print(f"  {tier:<8}{peak:>12,.0f}{knee:>11,.0f}{usable:>12,.0f}{frac:>10.3f}")
+    serving = max(1, math.ceil(total))
+    print(f"  {'TOTAL':<8}{'':>12}{'':>11}{'':>12}{total:>10.3f}  -> {serving} GPU serving")
+    print(f"  with N+1: {serving + 1} production GPU for the LLM tiers")
+    out = dict(detail=detail, total_frac=total, serving=serving, prod=serving + 1)
 
     # ------------------------------------------------- vs the TSD's pool ----
-    nat = out["national"]
+    nat = out
     print("\n" + "=" * 96)
     print("AGAINST THE TSD's OWN POOL (section 12)")
     print(f"  TSD states : {TSD_POOL['prod_gpt_oss']} x H200 for gpt-oss-120b "
@@ -114,7 +109,7 @@ def main():
           f"for the LLM tiers, plus E5")
     heavy_frac = nat["detail"]["heavy"]["frac"]
     knee_h = knees["heavy"]["tok_s"]
-    peak_h = dem["national"]["tiers"]["heavy"]["peak_tok_s"]
+    peak_h = dem["tiers"]["heavy"]["peak_tok_s"]
     print(f"\n  The 3 gpt-oss-120b nodes carry the heavy tier, which needs "
           f"{heavy_frac:.2f} usable-GPU at peak.")
     print(f"  {'active':>8}{'% of 70% target':>18}{'% of raw knee':>15}   verdict")
@@ -129,12 +124,12 @@ def main():
             v = "comfortable"
         print(f"  {n:>8}{of_target:>17.1%}{of_knee:>15.1%}   {v}")
     print(f"\n  So the TSD's stated posture - 'latency-tolerant; 2 active for HA' - is")
-    print(f"  exactly at the edge once CHM is in and alarms are at the TSD's own 15M/day.")
+    print(f"  exactly at the edge once CHM is in pan-India and alarms are at the TSD's 15M/day.")
     print(f"  Two active still meets the SLO, but with ~0% of the 30% headroom left.")
 
     # ---- E5 is over-provisioned; that card is the answer to the edge above ----
-    RFO_DAY = dem["national"]["funnel"]["rfo"]
-    emb_q = RFO_DAY * 6 + dem["national"]["chm"]["cr_day"] * 8      # retrievals/day
+    RFO_DAY = dem["funnel"]["rfo"]
+    emb_q = RFO_DAY * 6 + dem["chm"]["cr_day"] * 8      # retrievals/day
     E5_RATE = 5_000                                                 # [PLAN] emb/s on one H200
     CORPUS_CHUNKS = 20_000_000                                      # [PLAN] KB + release docs
     print(f"\n  THE E5 NODE IS THE SLACK IN THIS POOL")

@@ -9,13 +9,12 @@ Sources
          s3.7: model tiering - gpt-oss-120b heavy, Gemma 4 26B (A4B) fast,
          Gemma 4 E4B pre-filter, Llama 3.1 8B for MOP generation, E5 embeddings,
          plus a VLM (s3.4.6) for diagrams and scanned documents.
-         s6.8-6.13: eight CHM agents, GUJ Circle, Paco/VoLTE/IP domains.
+         s6.8-6.13: eight CHM agents across Paco, VoLTE and IP domains.
   [PLAN] engineering planning assumption - to validate in the data workshop.
 
-Scope. FM is pan-India from the start (TSD s12 sizes on 15M alarms/day across
-~22 circles). CHM is pan-India at target too, with Gujarat as Phase 1 - so the
-GPU pool has to be sized for the target state and Phase 1 is only the entry
-point. Both phases are computed here; PHASE selects which one the run reports.
+Scope: both tracks are dimensioned pan-India. TSD s12 already sizes FM that way
+(15M alarms/day across ~22 circles); CHM is dimensioned to the same footprint so
+the pool is bought once against the full estate.
 """
 import json
 
@@ -31,33 +30,22 @@ RFO_FRAC         = 0.35              # [PLAN]
 RFO_DAY          = UAI_DAY * RFO_FRAC
 TICKET_DAY       = UAI_DAY * 0.23    # [PLAN] ~ same ratio as the Aug model
 
-# --------------------------------- CHM: Gujarat in Phase 1, pan-India target --
+# ------------------------------------------------- CHM, pan-India -----------
 # [TSD] s6.11: max 5 concurrent changes per circle; P1 changes in 02:00-06:00.
-# That per-circle cap is what bounds execution volume, and it scales with circles.
-import os
-PHASE = os.environ.get("PHASE", "national")      # "guj" (phase 1) or "national"
+# Across ~22 circles that per-circle cap is what bounds national execution volume.
+CR_DAY           = 1_250             # [PLAN] Paco + VoLTE + IP, all circles
+CHANGE_ITEMS_DAY = 3_750             # [PLAN] NEs touched across those CRs
 
-# Gujarat baseline
-GUJ_CR_DAY       = 100               # [PLAN] Paco + VoLTE + IP, GUJ circle
-GUJ_ITEMS_DAY    = 300               # [PLAN] NEs touched across those CRs
 # [TSD] s5.1: release documents are QUARTERLY / BI-ANNUAL - OEM release notes,
 # technical bulletins and upgrade guides. So MOP generation is a burst workload,
-# not a daily rate: 4 OEMs (Nokia, Ericsson, Huawei, ZTE) x 3 domains per drop.
-GUJ_DOCS_PER_BURST = 12              # [TSD-derived] 4 OEMs x 3 domains
-BURST_WINDOW_H     = 24              # [PLAN] must be indexed before the calendar builds
-
-# Gujarat is one of Vi's larger circles - roughly 8% of the national network, so
-# pan-India CHM is ~12.5x the Gujarat baseline, not 22x.
-NATIONAL_MULT    = 12.5              # [PLAN]
-SCALE            = 1.0 if PHASE == "guj" else NATIONAL_MULT
-
-CR_DAY           = GUJ_CR_DAY    * SCALE
-CHANGE_ITEMS_DAY = GUJ_ITEMS_DAY * SCALE
-DOCS_PER_BURST   = GUJ_DOCS_PER_BURST * SCALE
+# not a daily rate: 4 OEMs (Nokia, Ericsson, Huawei, ZTE) x 3 domains per circle.
+DOCS_PER_BURST   = 150               # [PLAN] national release drop
+BURST_WINDOW_H   = 24                # [PLAN] must be indexed before the calendar builds
 RELEASE_DOCS_DAY = DOCS_PER_BURST / 90.0     # steady-state average between drops
+
 MOPS_PER_DOC     = 15                # [PLAN] one per NE-type / activity combination
 ROLLBACK_FRAC    = 0.05              # [PLAN]
-MIS_REPORTS_DAY  = 20 * (1 if PHASE == "guj" else 3)   # [PLAN] national rollups too
+MIS_REPORTS_DAY  = 60                # [PLAN] circle + national rollups
 
 # ------------------------------------------------------------- workloads -----
 # tier: heavy = gpt-oss-120b | fast = Gemma 4 26B A4B | mop = Llama 3.1 8B AWQ
@@ -67,7 +55,7 @@ WORKLOADS = [
     ("FM · ticket enrichment",         "FM",  "fast",  TICKET_DAY,         2_500,   500),
     ("FM · shift handover",            "FM",  "heavy", 120,               30_000, 1_500),
     ("FM · operator chat Q&A",         "FM",  "fast",  2_400,              2_000,   300),
-    # --- Change Management (Gujarat in phase 1, pan-India at target) ---
+    # --- Change Management (pan-India) ---
     # burst workloads - sized on the quarterly drop, not the daily mean
     ("CHM · MOP generation (burst)",   "CHM", "mop",   DOCS_PER_BURST * MOPS_PER_DOC
                                                         * 24 / BURST_WINDOW_H,
@@ -106,8 +94,7 @@ if __name__ == "__main__":
     rows, tier, track = compute()
     print(f"FM funnel [TSD 15M/day]: {RAW_ALARMS_DAY:,} raw -> {IN_SCOPE:,.0f} in-scope "
           f"-> {DISTINCT:,.0f} distinct -> {UAI_DAY:,.0f} UAI -> {RFO_DAY:,.0f} RFO/day")
-    scope = "Gujarat, phase 1" if PHASE == "guj" else f"pan-India ({NATIONAL_MULT}x Gujarat)"
-    print(f"CHM [{scope}]: {CR_DAY:,.0f} CRs/day, {CHANGE_ITEMS_DAY:,.0f} change items")
+    print(f"CHM [pan-India]: {CR_DAY:,.0f} CRs/day, {CHANGE_ITEMS_DAY:,.0f} change items")
     print(f"CHM release drop [TSD quarterly]: {DOCS_PER_BURST:,.0f} docs -> "
           f"{DOCS_PER_BURST*MOPS_PER_DOC:,.0f} MOPs in a {BURST_WINDOW_H}h window "
           f"(daily mean {RELEASE_DOCS_DAY*MOPS_PER_DOC:,.1f} MOPs)")
@@ -143,10 +130,18 @@ if __name__ == "__main__":
         print(f"TRACK {k:<4} {n:>9,.0f} calls/day  {t:>14,.0f} tok/day  "
               f"({t / sum(track[x][0] + track[x][1] for x in track):.1%} of tokens)")
 
+    burst_names = {"CHM · MOP generation (burst)", "CHM · release-doc parsing"}
+    chm_burst = sum(r["total_tok"] for r in rows if r["workload"] in burst_names)
+    chm_steady = sum(r["total_tok"] for r in rows
+                     if r["track"] == "CHM" and r["workload"] not in burst_names)
+    print(f"\n  CHM steady state {chm_steady/1e6:,.0f}M/day | "
+          f"release-drop burst {chm_burst/1e6:,.0f}M/day")
+
     grand = sum(v["total_tok"] for v in out_tier.values())
     print(f"\nGRAND TOTAL {grand/1e6:,.0f}M tokens/day  ({grand*365/1e9:,.1f}B/year)")
 
-    json.dump(dict(phase=PHASE, scale=SCALE, rows=rows, tiers=out_tier, tracks=out_track,
+    json.dump(dict(rows=rows, tiers=out_tier, tracks=out_track,
+                   chm_split=dict(steady=chm_steady, burst=chm_burst),
                    funnel=dict(raw=RAW_ALARMS_DAY, in_scope=IN_SCOPE,
                                distinct=DISTINCT, uai=UAI_DAY, rfo=RFO_DAY),
                    chm=dict(cr_day=CR_DAY, items=CHANGE_ITEMS_DAY,
@@ -154,4 +149,4 @@ if __name__ == "__main__":
                             mops_per_burst=DOCS_PER_BURST * MOPS_PER_DOC,
                             burst_window_h=BURST_WINDOW_H),
                    peak_factor=PEAK_FACTOR, grand_total=grand),
-              open(f"demand_v2_{PHASE}.json", "w"), indent=1)
+              open("demand_v2.json", "w"), indent=1)

@@ -1,6 +1,4 @@
 {
- "phase": "national",
- "scale": 12.5,
  "rows": [
   {
    "workload": "FM \u00b7 GenAI RFO, agentic loop",
@@ -175,6 +173,10 @@
    "peak_tok_s": 2377.6
   }
  },
+ "chm_split": {
+  "steady": 25370000,
+  "burst": 60225000
+ },
  "funnel": {
   "raw": 15000000,
   "in_scope": 10500000.0,
@@ -183,10 +185,10 @@
   "rfo": 18375.0
  },
  "chm": {
-  "cr_day": 1250.0,
-  "items": 3750.0,
-  "docs_per_burst": 150.0,
-  "mops_per_burst": 2250.0,
+  "cr_day": 1250,
+  "items": 3750,
+  "docs_per_burst": 150,
+  "mops_per_burst": 2250,
   "burst_window_h": 24
  },
  "peak_factor": 2.4000000000000004,
