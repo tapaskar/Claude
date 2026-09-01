@@ -9,15 +9,27 @@ from pptx.util import Emu
 from PIL import Image, ImageDraw, ImageFont
 
 LIB = "/usr/share/fonts/truetype/liberation/"
-FACE = {("Arial",0):"LiberationSans-Regular.ttf", ("Arial",1):"LiberationSans-Bold.ttf",
-        ("Calibri",0):"LiberationSans-Regular.ttf", ("Calibri",1):"LiberationSans-Bold.ttf",
-        ("Courier New",0):"LiberationMono-Regular.ttf", ("Courier New",1):"LiberationMono-Bold.ttf"}
+PLEX = "/usr/share/fonts/truetype/plex/"
+FACE = {
+    ("IBM Plex Sans", False): PLEX + "IBMPlexSans-Regular.ttf",
+    ("IBM Plex Sans", True):  PLEX + "IBMPlexSans-SemiBold.ttf",
+    ("IBM Plex Mono", False): PLEX + "IBMPlexMono-Regular.ttf",
+    ("IBM Plex Mono", True):  PLEX + "IBMPlexMono-Bold.ttf",
+    ("Arial", False): LIB + "LiberationSans-Regular.ttf",
+    ("Arial", True):  LIB + "LiberationSans-Bold.ttf",
+    ("Calibri", False): LIB + "LiberationSans-Regular.ttf",
+    ("Calibri", True):  LIB + "LiberationSans-Bold.ttf",
+    ("Courier New", False): LIB + "LiberationMono-Regular.ttf",
+    ("Courier New", True):  LIB + "LiberationMono-Bold.ttf",
+}
+DEFAULT_FACE = PLEX + "IBMPlexSans-Regular.ttf"
+
 E, DPI = 914400, 110
 _fc = {}
 def fnt(n,s,b):
     k=(n,round(s,1),b)
     if k not in _fc:
-        _fc[k]=ImageFont.truetype(LIB+FACE.get((n,int(b)),"LiberationSans-Regular.ttf"),
+        _fc[k]=ImageFont.truetype(FACE.get((n,bool(b)),DEFAULT_FACE),
                                   max(6,int(round(s*DPI/72))))
     return _fc[k]
 px = lambda emu: int(round(emu/E*DPI))

@@ -6,25 +6,31 @@ p.layout = 'LAYOUT_WIDE';            // 13.333 x 7.5
 p.author = 'Vi AI-NOC capacity model';
 p.title  = 'Vi AI-NOC Capacity Model';
 
-/* palette - carried from the capacity report, CVD-validated */
+/* palette - IBM Carbon. One scheme across both slides: the d* tokens are kept so
+   slide 2's code is untouched, but they now resolve to the same light values. */
 const C = {
-  paper:'F4F5F2', card:'FFFFFF', ink:'171A18', ink2:'3E453F', ink3:'6A726B',
-  rule:'D9DCD4', sunk:'EDEFE9',
-  teal:'008E7F', rust:'B04A12',
-  dark:'12211E', dcard:'1B2C28', dink:'E9ECE7', dink2:'A9B3AB', dink3:'8A968C',
-  dteal:'00A896', drust:'CB6127', drule:'2C3E39',
+  paper:'F4F4F4', card:'FFFFFF', sunk:'E8E8E8',          // gray 10 / white / gray 20
+  ink:'161616', ink2:'525252', ink3:'6F6F6F',            // gray 100 / 70 / 60
+  rule:'E0E0E0', rule2:'C6C6C6',                         // gray 20 / 30
+  teal:'0F62FE', rust:'D02670',                          // blue 60 / magenta 60
+  ok:'198038', warn:'8A3800', no:'DA1E28',               // green 60 / orange 70 / red 60
+  okWash:'DEFBE6', noWash:'FFF1F1',                      // green 10 / red 10
+  blueWash:'EDF5FF', magWash:'FFF0F7',                   // blue 10 / magenta 10
 };
-const F = {d:'Arial', b:'Calibri', m:'Courier New'};
+// uniform scheme - the former dark-slide tokens now point at the same values
+C.dark = C.paper; C.dcard = C.card; C.dink = C.ink; C.dink2 = C.ink2;
+C.dink3 = C.ink3; C.dteal = C.teal; C.drust = C.rust; C.drule = C.rule;
+
+const F = {d:'IBM Plex Sans', b:'IBM Plex Sans', m:'IBM Plex Mono'};
 const M = 0.55, W = 13.333, USE = W - 2*M;
 
 /* one filled square - the motif, repeated on both slides */
 const sq = (s,x,y,c,sz) => s.addShape(p.ShapeType.rect,
   {x, y, w:sz||0.075, h:sz||0.075, fill:{color:c}, line:{type:'none'}});
 
-const card = (s,x,y,w,h,dark) => s.addShape(p.ShapeType.roundRect, {
+const card = (s,x,y,w,h) => s.addShape(p.ShapeType.roundRect, {
   x,y,w,h, rectRadius:0.05,
-  fill:{color: dark ? C.dcard : C.card},
-  line:{color: dark ? C.drule : C.rule, width:0.75},
+  fill:{color: C.card}, line:{color: C.rule, width:0.75},
 });
 
 const head = (s,x,y,w,t,c) => s.addText(t, {
@@ -65,11 +71,11 @@ s1.addText([
   {text:'8 CHM agents, GUJ first → pan-India  (§6.8–6.13)', options:{bullet:true, breakLine:true}},
   {text:'Release docs quarterly / bi-annual  (§5.1)', options:{bullet:true, breakLine:true}},
   {text:'Max 5 concurrent changes per circle  (§6.11)', options:{bullet:true}},
-], {x:CX[0]+0.24, y:CY+0.80, w:CW-0.48, h:2.10, isTextBox:true, margin:0,
+], {x:CX[0]+0.24, y:CY+0.80, w:CW-0.48, h:1.60, isTextBox:true, margin:0,
     fontFace:F.b, fontSize:10, color:C.ink2, paraSpaceAfter:3, lineSpacing:13});
 
 s1.addText('ASSUMED — planning values to validate', {
-  x:CX[0]+0.24, y:CY+2.98, w:CW-0.48, h:0.2, isTextBox:true, margin:0,
+  x:CX[0]+0.24, y:CY+2.52, w:CW-0.48, h:0.2, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:8.5, bold:true, color:C.rust, charSpacing:0.9});
 s1.addText([
   {text:'70% RAN-linked → 52.5k incidents/day', options:{bullet:true, breakLine:true}},
@@ -78,15 +84,15 @@ s1.addText([
   {text:'CHM: 100 CRs/day GUJ → 1,250 pan-India', options:{bullet:true, breakLine:true}},
   {text:'Release drop = 12 docs GUJ → 150 national', options:{bullet:true, breakLine:true}},
   {text:'Peak hour = 10% of the day → 2.4×', options:{bullet:true}},
-], {x:CX[0]+0.24, y:CY+3.22, w:CW-0.48, h:1.40, isTextBox:true, margin:0,
+], {x:CX[0]+0.24, y:CY+2.76, w:CW-0.48, h:1.40, isTextBox:true, margin:0,
     fontFace:F.b, fontSize:10, color:C.ink2, paraSpaceAfter:3, lineSpacing:13});
 
-s1.addShape(p.ShapeType.roundRect, {x:CX[0]+0.24, y:CY+4.55, w:CW-0.48, h:0.78,
-  rectRadius:0.04, fill:{color:C.sunk}, line:{type:'none'}});
+s1.addShape(p.ShapeType.roundRect, {x:CX[0]+0.24, y:CY+4.36, w:CW-0.48, h:0.86,
+  rectRadius:0.04, fill:{color:C.blueWash}, line:{type:'none'}});
 s1.addText([
-  {text:'Alarms moved 10M → 15M/day. ', options:{bold:true, color:C.ink}},
+  {text:'Alarms moved 10M → 15M/day. ', options:{bold:true, color:C.teal}},
   {text:'The TSD supersedes the August one-slide. That +50% is what pushes the heavy tier to 2.06 GPU.', options:{color:C.ink2}},
-], {x:CX[0]+0.38, y:CY+4.64, w:CW-0.76, h:0.62, isTextBox:true, margin:0,
+], {x:CX[0]+0.38, y:CY+4.46, w:CW-0.76, h:0.68, isTextBox:true, margin:0,
     fontFace:F.b, fontSize:10, lineSpacing:13});
 
 /* ---- col 2 : decision points ---- */
@@ -181,7 +187,7 @@ SCEN.forEach(([t, tok, pct, isChm]) => {
 });
 
 s1.addShape(p.ShapeType.roundRect, {x:BX, y:CY+4.42, w:BW, h:1.00, rectRadius:0.04,
-  fill:{color:C.sunk}, line:{type:'none'}});
+  fill:{color:C.magWash}, line:{type:'none'}});
 s1.addText('CHM does not move the number', {
   x:BX+0.14, y:CY+4.52, w:BW-0.28, h:0.22, isTextBox:true, margin:0,
   fontFace:F.d, fontSize:10, bold:true, color:C.rust});
@@ -207,7 +213,7 @@ s2.addText([
 /* --- stat row --- */
 const ST = [
   ['4', '+1 × H200', 'Production GPU', 'Matches the TSD total.\n3 serving + 1 for N+1.', true],
-  ['2.06', 'of 3 cards', 'Heavy tier', 'gpt-oss-120b alone, at\npan-India peak.', false],
+  ['2.06', 'of 3 cards', 'Heavy tier', 'gpt-oss-120b alone, at\npan-India peak.', 'warn'],
   ['18', '% of tokens', 'Change Mgmt', 'Pan-India, on a release\nburst day. 0.33 GPU.', false],
   ['0.03', '% utilised', 'The E5 card', 'A 0.7 GB encoder on a\n141 GB card.', false],
 ];
@@ -218,7 +224,8 @@ ST.forEach(([n, u, l, s, hero], i) => {
   s2.addText(l.toUpperCase(), {x:x+0.20, y:1.44, w:SW-0.4, h:0.2, isTextBox:true, margin:0,
     fontFace:F.d, fontSize:8.5, bold:true, color:C.dink3, charSpacing:1});
   s2.addText([
-    {text:n, options:{fontSize:31, bold:true, color: hero ? C.dteal : C.dink}},
+    {text:n, options:{fontSize:31, bold:true,
+      color: hero === true ? C.dteal : hero === 'warn' ? C.rust : C.dink}},
     {text:' '+u, options:{fontSize:11, bold:true, color:C.dink3}},
   ], {x:x+0.20, y:1.66, w:SW-0.4, h:0.56, isTextBox:true, margin:0, fontFace:F.d});
   s2.addText(s, {x:x+0.20, y:2.24, w:SW-0.4, h:0.56, isTextBox:true, margin:0,
@@ -242,12 +249,13 @@ CHAIN.forEach(([t, v, s], i) => {
   s2.addText(t, {x:x+0.16, y:3.46, w:CHW-0.32, h:0.2, isTextBox:true, margin:0,
     fontFace:F.b, fontSize:9, color:C.dink3});
   s2.addText(v, {x:x+0.16, y:3.66, w:CHW-0.32, h:0.28, isTextBox:true, margin:0,
-    fontFace:F.d, fontSize:15, bold:true, color: i===4 ? C.dteal : C.dink});
+    fontFace:F.d, fontSize:15, bold:true,
+    color: [C.ok, C.warn, C.no, C.teal, C.rust][i]});
   s2.addText(s, {x:x+0.16, y:3.97, w:CHW-0.32, h:0.32, isTextBox:true, margin:0,
     fontFace:F.b, fontSize:8, color:C.dink3, lineSpacing:10});
   if (i < 2) {
     s2.addShape(p.ShapeType.rightArrow, {x:x+CHW+0.055, y:3.79, w:0.15, h:0.14,
-      fill:{color:C.drust}, line:{type:'none'}});
+      fill:{color:C.rule2}, line:{type:'none'}});
   }
 });
 

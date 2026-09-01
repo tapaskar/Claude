@@ -1,21 +1,30 @@
 """Programmatic text-fit QA: measure every text box against its frame.
 
 LibreOffice cannot load any pptx in this sandbox, so instead of eyeballing a
-render we measure. Liberation Sans is metrically identical to Arial and
-Liberation Mono to Courier New; Calibri is NARROWER than Arial, so measuring
-Calibri runs with Liberation Sans is deliberately conservative - anything that
-fits here fits in real PowerPoint.
+render we measure. The deck is set in IBM Plex Sans / IBM Plex Mono and the real
+faces are installed here, so these measurements are exact rather than approximate
+- provided the recipient also has IBM Plex Sans. If they do not, PowerPoint
+substitutes and the fit is no longer guaranteed.
 """
 from pptx import Presentation
 from PIL import ImageFont
 
 LIB = "/usr/share/fonts/truetype/liberation/"
+PLEX = "/usr/share/fonts/truetype/plex/"
 FACE = {
-    ("Arial", False): "LiberationSans-Regular.ttf", ("Arial", True): "LiberationSans-Bold.ttf",
-    ("Calibri", False): "LiberationSans-Regular.ttf", ("Calibri", True): "LiberationSans-Bold.ttf",
-    ("Courier New", False): "LiberationMono-Regular.ttf",
-    ("Courier New", True): "LiberationMono-Bold.ttf",
+    ("IBM Plex Sans", False): PLEX + "IBMPlexSans-Regular.ttf",
+    ("IBM Plex Sans", True):  PLEX + "IBMPlexSans-SemiBold.ttf",
+    ("IBM Plex Mono", False): PLEX + "IBMPlexMono-Regular.ttf",
+    ("IBM Plex Mono", True):  PLEX + "IBMPlexMono-Bold.ttf",
+    ("Arial", False): LIB + "LiberationSans-Regular.ttf",
+    ("Arial", True):  LIB + "LiberationSans-Bold.ttf",
+    ("Calibri", False): LIB + "LiberationSans-Regular.ttf",
+    ("Calibri", True):  LIB + "LiberationSans-Bold.ttf",
+    ("Courier New", False): LIB + "LiberationMono-Regular.ttf",
+    ("Courier New", True):  LIB + "LiberationMono-Bold.ttf",
 }
+DEFAULT_FACE = PLEX + "IBMPlexSans-Regular.ttf"
+
 PX, EMU_IN = 4, 914400
 _cache = {}
 
@@ -24,7 +33,7 @@ def font(name, sz, bold):
     key = (name, sz, bold)
     if key not in _cache:
         _cache[key] = ImageFont.truetype(
-            LIB + FACE.get((name, bold), "LiberationSans-Regular.ttf"), int(round(sz * PX)))
+            FACE.get((name, bold), DEFAULT_FACE), int(round(sz * PX)))
     return _cache[key]
 
 
