@@ -30,6 +30,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from .evaluate import gt_components
+
 warnings.filterwarnings("ignore")
 
 ROOT = Path("/tmp/wound-segmentation/data/Foot Ulcer Segmentation Challenge")
@@ -48,34 +50,38 @@ def _jitter_box(mask: np.ndarray, jitter: float, rng) -> np.ndarray:
 
 
 class CachedFUSeg:
-    """(embedding fp16 .npy, mask png, flipped) triples."""
+    """(embedding fp16 .npy, mask png, flipped) triples, addressed per wound.
+
+    The product rule from Phase 0 is one box per wound, and the evaluation scores
+    per wound, so training samples one connected component per step (same
+    MIN_GT_COMPONENT_PX rule as evaluate.gt_components) rather than the whole mask.
+    """
 
     def __init__(self, split: str, cache: Path, with_flip: bool):
-        self.items = []
+        self.items, self.n_wounds = [], 0
         for f in sorted((ROOT / split / "labels").glob("*.png")):
+            m = cv2.imread(str(f), 0)
+            assert m.shape == (IMG, IMG), f"{f} is {m.shape}, expected {IMG}x{IMG}"
+            if not (m > 127).any():
+                continue                                   # nothing to prompt on
+            n_comp = len(list(gt_components(m > 127, True)))
             for flip in ((False, True) if with_flip else (False,)):
                 e = cache / split / (f.stem + ("_flip" if flip else "") + ".npy")
                 if e.exists():
                     self.items.append((e, f, flip))
-        # drop empty masks - nothing to prompt on
-        keep = []
-        for e, f, flip in self.items:
-            m = cv2.imread(str(f), 0)
-            assert m.shape == (IMG, IMG), f"{f} is {m.shape}, expected {IMG}x{IMG}"
-            if (m > 127).any():
-                keep.append((e, f, flip))
-        self.items = keep
+                    self.n_wounds += n_comp
 
     def __len__(self):
         return len(self.items)
 
     def get(self, i):
+        """-> (embedding (256,64,64) float32, [component masks], flipped)."""
         e, f, flip = self.items[i]
         emb = torch.from_numpy(np.load(e).astype(np.float32))
         m = cv2.imread(str(f), 0) > 127
         if flip:
             m = np.ascontiguousarray(m[:, ::-1])
-        return emb, m
+        return emb, list(gt_components(m, True))
 
 
 def soft_dice_loss(logits, target, eps=1.0):
@@ -117,17 +123,31 @@ def forward_decoder(sam, emb, boxes_512):
     return F.interpolate(low_res, (IMG, IMG), mode="bilinear", align_corners=False)
 
 
-@torch.no_grad()
-def validate(sam, ds: CachedFUSeg, boxes: list[np.ndarray]) -> float:
-    """Mean Dice on the validation split with fixed pre-drawn jittered boxes."""
-    sam.mask_decoder.eval()
-    dices = []
+def draw_val_set(ds: CachedFUSeg, jitter: float, seed: int):
+    """Fixed (image index, component index, box) triples so epochs are comparable."""
+    rng = np.random.default_rng(seed)
+    out = []
     for i in range(len(ds)):
-        emb, m = ds.get(i)
-        logits = forward_decoder(sam, emb[None], boxes[i][None])
+        _, comps = ds.get(i)
+        for k, m in enumerate(comps):
+            out.append((i, k, _jitter_box(m, jitter, rng)))
+    return out
+
+
+@torch.no_grad()
+def validate(sam, ds: CachedFUSeg, val_set) -> float:
+    """Mean per-wound Dice (raw mask, no post-processing) on the validation split."""
+    sam.mask_decoder.eval()
+    dices, cur = [], (-1, None, None)
+    for i, k, box in val_set:
+        if cur[0] != i:
+            emb, comps = ds.get(i)
+            cur = (i, emb, comps)
+        _, emb, comps = cur
+        logits = forward_decoder(sam, emb[None], box[None])
         pred = (logits[0, 0] > 0).numpy()
-        inter = np.logical_and(pred, m).sum()
-        dices.append(2 * inter / (pred.sum() + m.sum() + 1e-9))
+        m = comps[k]
+        dices.append(2 * np.logical_and(pred, m).sum() / (pred.sum() + m.sum() + 1e-9))
     sam.mask_decoder.train()
     return float(np.mean(dices))
 
@@ -166,10 +186,9 @@ def main(argv=None):
     cache = Path(args.cache)
     train = CachedFUSeg("train", cache, with_flip=True)
     val = CachedFUSeg("validation", cache, with_flip=False)
-    print(f"train samples {len(train)} (with flips) | val {len(val)}")
-    # fixed validation boxes so epoch-to-epoch Dice is comparable
-    vrng = np.random.default_rng(1234)
-    val_boxes = [_jitter_box(val.get(i)[1], 0.15, vrng) for i in range(len(val))]
+    val_set = draw_val_set(val, 0.15, 1234)     # eval protocol: 15% jitter, per wound
+    print(f"train {len(train)} embeddings / {train.n_wounds} wounds (with flips) | "
+          f"val {len(val)} images / {len(val_set)} wounds")
 
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.01)
     steps_per_epoch = (len(train) + args.bs - 1) // args.bs
@@ -178,8 +197,8 @@ def main(argv=None):
 
     Path(args.log).parent.mkdir(parents=True, exist_ok=True)
     log = dict(args=vars(args), epochs=[])
-    base = validate(sam, val, val_boxes)
-    print(f"epoch  0  val dice {base:.4f}  (zero-shot baseline, same boxes)")
+    base = validate(sam, val, val_set)
+    print(f"epoch  0  val dice {base:.4f}  (zero-shot baseline, per wound, same boxes)")
     log["epochs"].append(dict(epoch=0, val_dice=round(base, 4)))
     best, best_ep = base, 0
     torch.save(sam.state_dict(), args.out)          # never worse than baseline
@@ -193,7 +212,8 @@ def main(argv=None):
             idx = order[s:s + args.bs]
             embs, masks, boxes = [], [], []
             for i in idx:
-                e, m = train.get(i)
+                e, comps = train.get(i)
+                m = comps[rng.integers(len(comps))]          # one wound per sample
                 embs.append(e); masks.append(m); boxes.append(_jitter_box(m, args.jitter, rng))
             emb = torch.stack(embs)
             gt = torch.from_numpy(np.stack(masks)).float()[:, None]
@@ -204,7 +224,7 @@ def main(argv=None):
             torch.nn.utils.clip_grad_norm_(params, 1.0)
             opt.step(); sched.step()
             tot += float(loss) * len(idx); n += len(idx)
-        vd = validate(sam, val, val_boxes)
+        vd = validate(sam, val, val_set)
         mark = ""
         if vd > best:
             best, best_ep = vd, ep
