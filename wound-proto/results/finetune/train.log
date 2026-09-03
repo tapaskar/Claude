@@ -1,2 +1,3 @@
 trainable: 3.51M (mask decoder, single-mask path; 4.06M in decoder)
 train 1582 embeddings / 2040 wounds (with flips) | val 195 images / 253 wounds
+epoch  0  val dice loose 0.8606  tight 0.8916  (zero-shot baseline, per wound, same boxes)
