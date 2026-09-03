@@ -1,3 +1,25 @@
 trainable: 3.51M (mask decoder, single-mask path; 4.06M in decoder)
 train 1582 embeddings / 2040 wounds (with flips) | val 195 images / 253 wounds
 epoch  0  val dice 0.8606  (zero-shot baseline, per wound, same boxes)
+epoch  1  loss 0.1061  val dice 0.9014  lr 9.94e-05  228s  *saved*
+epoch  2  loss 0.0961  val dice 0.8996  lr 9.76e-05  205s
+epoch  3  loss 0.0913  val dice 0.8985  lr 9.46e-05  199s
+epoch  4  loss 0.0900  val dice 0.8962  lr 9.05e-05  200s
+epoch  5  loss 0.0860  val dice 0.8839  lr 8.54e-05  201s
+epoch  6  loss 0.0831  val dice 0.8985  lr 7.94e-05  202s
+epoch  7  loss 0.0827  val dice 0.8963  lr 7.27e-05  197s
+epoch  8  loss 0.0786  val dice 0.9018  lr 6.55e-05  193s  *saved*
+epoch  9  loss 0.0771  val dice 0.8960  lr 5.78e-05  194s
+epoch 10  loss 0.0754  val dice 0.9013  lr 5.00e-05  199s
+epoch 11  loss 0.0728  val dice 0.9012  lr 4.22e-05  206s
+epoch 12  loss 0.0709  val dice 0.9046  lr 3.45e-05  206s  *saved*
+epoch 13  loss 0.0705  val dice 0.9066  lr 2.73e-05  206s  *saved*
+epoch 14  loss 0.0686  val dice 0.9034  lr 2.06e-05  202s
+epoch 15  loss 0.0675  val dice 0.9047  lr 1.46e-05  202s
+epoch 16  loss 0.0672  val dice 0.9030  lr 9.55e-06  204s
+epoch 17  loss 0.0659  val dice 0.9044  lr 5.45e-06  209s
+epoch 18  loss 0.0656  val dice 0.9040  lr 2.45e-06  204s
+epoch 19  loss 0.0642  val dice 0.9040  lr 6.16e-07  204s
+epoch 20  loss 0.0651  val dice 0.9039  lr 0.00e+00  204s
+
+best val dice 0.9066 at epoch 13  (baseline 0.8606)  -> weights/mobile_sam_fuseg.pt

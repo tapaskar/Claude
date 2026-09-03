@@ -190,18 +190,22 @@ python -m wound_proto.evaluate fuseg --per-wound --ckpt weights/mobile_sam_fuseg
   Medical Device (EU MDR, FDA, CDSCO). Intended use has to be decided before the next line
   of product code.
 
-## What Phase 1 changes
+## What comes next (Phase 2)
 
-1. Fine-tune a real segmenter (SegFormer-B2 or nnU-Net) on FUSeg + DFUC2022 + AZH, and
-   start collecting your own images from day one — public data will not cover your wound
-   types.
+1. **Data before models.** The decoder fine-tune above took FUSeg from 0.86 to 0.90 in one
+   epoch and plateaued by epoch 13; the ceiling is now the data, not the optimiser. Add
+   DFUC2022 and AZH, and start collecting your own images from day one — public data will
+   not cover your wound types, skin tones or lighting.
 2. Replace the ArUco square with a purpose-designed sticker (colour patch for white balance,
    known size, patient-safe adhesive) — same maths, better detection under glare.
 3. Report **both** errors on every result: mask Dice against a clinician, and area error
    against a ruler. Calibration error compounds on segmentation error.
 4. Tissue classification (granulation / slough / necrosis / epithelial) is the long pole
-   and has no public data. Build the annotation pipeline first: SAM pre-segments, wound-care
-   nurses correct.
+   and has no public data. Build the annotation pipeline first: the fine-tuned decoder
+   pre-segments, wound-care nurses correct. For the classifier itself, a linear probe on
+   MedSigLIP embeddings (Google's 400 M medical image encoder, trained with dermatology data)
+   is the cheapest first experiment; MedGemma belongs to the report-writing layer above it,
+   not to measurement.
 
 ## Testing
 
