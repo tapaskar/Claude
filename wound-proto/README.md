@@ -203,6 +203,24 @@ python -m wound_proto.evaluate fuseg --per-wound --ckpt weights/mobile_sam_fuseg
    and has no public data. Build the annotation pipeline first: SAM pre-segments, wound-care
    nurses correct.
 
+## Testing
+
+Four layers, cheapest first. Each one isolates a different failure.
+
+| Layer | Command | What it proves | Pass criterion |
+|---|---|---|---|
+| Unit | `pip install -e ".[test]"` then `pytest -q -m "not model"` (3 s) | Marker detection, homography, measurement and post-processing on fixtures with exact ground truth; no weights needed | All green. Area within 2.5 % at 0°, 30°, 45°; no marker → `calibrated: false`, never a guessed scale |
+| Unit + model | `pytest -q` (~25 s) | Batched Phase 1 decoder equals the stock decoder; MobileSAM segments a fixture; the CLI runs end to end | All green. Dice > 0.90 on a fixture, area within 10 % after segmentation |
+| Synthetic | `python -m wound_proto.evaluate synth --n 40` | Calibration + measurement statistics; homography vs naive scale at every tilt | Homography mean error ≈ 0.5 %, p95 ≈ 1 %; naive error grows with tilt |
+| Real data | `python -m wound_proto.evaluate fuseg --per-wound --root <FUSeg dir>` (~3 min) | Segmentation against clinician masks | Per-wound Dice ≥ 0.86 zero-shot; a fine-tuned `--ckpt` must beat it, not just match it |
+
+Then the test that none of the above replaces: **print a 20 mm ArUco marker** (id 0 from
+`DICT_4X4_50`, e.g. `cv2.aruco.generateImageMarker`), place it beside an object of known
+size such as a coin or a drawn shape, photograph it square-on and at ~30° with a phone, and
+run the CLI on both. The two areas should agree with each other and with the ruler to within
+a few percent, and `perspective_correction_pct` should be near zero square-on and clearly
+non-zero when tilted. That is the acceptance test a clinician will run whether you do or not.
+
 ## Layout
 
 ```

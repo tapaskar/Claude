@@ -18,3 +18,11 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["wound_proto*"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["model: needs weights/mobile_sam.pt and the mobile_sam package"]
+filterwarnings = ["ignore::UserWarning"]
