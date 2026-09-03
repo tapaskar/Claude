@@ -65,9 +65,11 @@ def finetune_block(log: dict, zs: dict, ft: dict) -> str:
     row = lambda k, name: (f"| {name} | {zs[k]['mean']:.3f} | {ft[k]['mean']:.3f} | "  # noqa: E731
                            f"{ft[k]['mean'] - zs[k]['mean']:+.3f} | {zs[k]['median']:.3f} | {ft[k]['median']:.3f} "
                            f"| {zs[k]['p10']:.3f} | {ft[k]['p10']:.3f} | {zs[k]['min']:.3f} | {ft[k]['min']:.3f} |")
-    return f"""**{log['args']['epochs']} epochs, {secs/60:.0f} min on 4 CPU cores, {log['best_epoch']} = best epoch.**
-Validation Dice on fixed jittered boxes went {log['baseline_val_dice']:.3f} (zero-shot) → **{log['best_val_dice']:.3f}**
-during training; the table is the independent per-wound evaluation of the saved checkpoint.
+    tight = (f" and with tight boxes {log['baseline_val_dice_tight']:.3f} → **{log['best_val_dice_tight']:.3f}**"
+             if "best_val_dice_tight" in log else "")
+    return f"""**{log['args']['epochs']} epochs, {secs/60:.0f} min on 4 CPU cores, best epoch {log['best_epoch']}.**
+During training, per-wound validation Dice with loose boxes went {log['baseline_val_dice']:.3f} (zero-shot) → **{log['best_val_dice']:.3f}**{tight}.
+The table is the independent evaluation of the saved checkpoint through the full pipeline.
 
 | FUSeg validation, per wound ({ft['n']} wounds) | zero-shot mean | fine-tuned mean | Δ | zero-shot median | fine-tuned median | zs p10 | ft p10 | zs min | ft min |
 |---|---|---|---|---|---|---|---|---|---|

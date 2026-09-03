@@ -1,0 +1,48 @@
+{
+ "dataset": "FUSeg",
+ "split": "validation",
+ "per_wound": true,
+ "n": 253,
+ "n_images": 195,
+ "n_skipped_empty_gt": 5,
+ "n_multi_wound_images": 38,
+ "box_jitter": 0.15,
+ "checkpoint": "weights/mobile_sam_fuseg.pt",
+ "model": "MobileSAM vit_t (box prompt, fine-tuned decoder)",
+ "dice_raw": {
+  "mean": 0.9066,
+  "median": 0.9313,
+  "std": 0.0792,
+  "p10": 0.8147,
+  "min": 0.5082
+ },
+ "dice_post": {
+  "mean": 0.9058,
+  "median": 0.9319,
+  "std": 0.0833,
+  "p10": 0.815,
+  "min": 0.4
+ },
+ "iou_post": {
+  "mean": 0.8369,
+  "median": 0.8725,
+  "std": 0.1192,
+  "p10": 0.6877,
+  "min": 0.25
+ },
+ "dice_tightbox": {
+  "mean": 0.8424,
+  "median": 0.8616,
+  "std": 0.1023,
+  "p10": 0.7197,
+  "min": 0.0
+ },
+ "frac_dice_post_ge_0_80": 0.909,
+ "frac_dice_post_lt_0_50": 0.008,
+ "secs_per_image_cpu": 0.74,
+ "examples": {
+  "worst": "0816.png",
+  "median": "0985.png",
+  "best": "0745.png"
+ }
+}

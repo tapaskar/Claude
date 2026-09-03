@@ -39,12 +39,18 @@ IMG = 512          # every FUSeg image is 512 x 512; asserted at load
 SAM_IN = 1024      # MobileSAM input frame; boxes are scaled 512 -> 1024
 
 
-def _jitter_box(mask: np.ndarray, jitter: float, rng) -> np.ndarray:
-    """GT bbox dilated per side by U(0.3,1)*jitter - same as evaluate.box_from_mask."""
+def _jitter_box(mask: np.ndarray, jitter: float, rng, lo: float = 0.0) -> np.ndarray:
+    """GT bbox dilated per side by U(lo,1)*jitter.
+
+    evaluate.box_from_mask uses lo=0.3, so an evaluation box is never tight.
+    Training uses lo=0.0 on purpose: the first fine-tune never saw a tight box and
+    learned to expect a margin, which cut the tight-box ("perfect user") Dice from
+    0.89 to 0.84. Covering the whole range from tight to 20 % loose fixes that.
+    """
     ys, xs = np.where(mask)
     x0, x1, y0, y1 = xs.min(), xs.max(), ys.min(), ys.max()
     w, h = x1 - x0 + 1, y1 - y0 + 1
-    j = lambda: rng.uniform(0.3, 1.0) * jitter  # noqa: E731
+    j = lambda: rng.uniform(lo, 1.0) * jitter  # noqa: E731
     box = np.array([x0 - w * j(), y0 - h * j(), x1 + w * j(), y1 + h * j()], dtype=np.float32)
     return np.clip(box, 0, IMG - 1)
 
@@ -130,7 +136,7 @@ def draw_val_set(ds: CachedFUSeg, jitter: float, seed: int):
     for i in range(len(ds)):
         _, comps = ds.get(i)
         for k, m in enumerate(comps):
-            out.append((i, k, _jitter_box(m, jitter, rng)))
+            out.append((i, k, _jitter_box(m, jitter, rng, lo=0.3)))   # evaluate's protocol
     return out
 
 
@@ -186,9 +192,15 @@ def main(argv=None):
     cache = Path(args.cache)
     train = CachedFUSeg("train", cache, with_flip=True)
     val = CachedFUSeg("validation", cache, with_flip=False)
-    val_set = draw_val_set(val, 0.15, 1234)     # eval protocol: 15% jitter, per wound
+    val_loose = draw_val_set(val, 0.15, 1234)   # eval protocol: 15% jitter, per wound
+    val_tight = draw_val_set(val, 0.0, 1234)    # "perfect user": exact GT box
     print(f"train {len(train)} embeddings / {train.n_wounds} wounds (with flips) | "
-          f"val {len(val)} images / {len(val_set)} wounds")
+          f"val {len(val)} images / {len(val_loose)} wounds")
+
+    def score():
+        """(loose, tight, selection score = their mean). Both must hold up."""
+        a, b = validate(sam, val, val_loose), validate(sam, val, val_tight)
+        return a, b, (a + b) / 2
 
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.01)
     steps_per_epoch = (len(train) + args.bs - 1) // args.bs
@@ -197,10 +209,11 @@ def main(argv=None):
 
     Path(args.log).parent.mkdir(parents=True, exist_ok=True)
     log = dict(args=vars(args), epochs=[])
-    base = validate(sam, val, val_set)
-    print(f"epoch  0  val dice {base:.4f}  (zero-shot baseline, per wound, same boxes)")
-    log["epochs"].append(dict(epoch=0, val_dice=round(base, 4)))
+    bl, bt, base = score()
+    print(f"epoch  0  val dice loose {bl:.4f}  tight {bt:.4f}  (zero-shot baseline, per wound, same boxes)")
+    log["epochs"].append(dict(epoch=0, val_dice=round(bl, 4), val_dice_tight=round(bt, 4)))
     best, best_ep = base, 0
+    best_loose, best_tight = bl, bt
     torch.save(sam.state_dict(), args.out)          # never worse than baseline
 
     sam.mask_decoder.train()
@@ -224,21 +237,24 @@ def main(argv=None):
             torch.nn.utils.clip_grad_norm_(params, 1.0)
             opt.step(); sched.step()
             tot += float(loss) * len(idx); n += len(idx)
-        vd = validate(sam, val, val_set)
+        vl, vt, vd = score()
         mark = ""
         if vd > best:
             best, best_ep = vd, ep
+            best_loose, best_tight = vl, vt
             torch.save(sam.state_dict(), args.out)
             mark = "  *saved*"
-        print(f"epoch {ep:2d}  loss {tot/n:.4f}  val dice {vd:.4f}  "
+        print(f"epoch {ep:2d}  loss {tot/n:.4f}  val dice loose {vl:.4f}  tight {vt:.4f}  "
               f"lr {sched.get_last_lr()[0]:.2e}  {time.time()-t0:.0f}s{mark}", flush=True)
-        log["epochs"].append(dict(epoch=ep, train_loss=round(tot / n, 4), val_dice=round(vd, 4),
-                                  secs=round(time.time() - t0)))
+        log["epochs"].append(dict(epoch=ep, train_loss=round(tot / n, 4), val_dice=round(vl, 4),
+                                  val_dice_tight=round(vt, 4), secs=round(time.time() - t0)))
         json.dump(log, open(args.log, "w"), indent=1)
 
-    log.update(best_val_dice=round(best, 4), best_epoch=best_ep, baseline_val_dice=round(base, 4))
+    log.update(best_val_dice=round(best_loose, 4), best_val_dice_tight=round(best_tight, 4),
+               best_epoch=best_ep, baseline_val_dice=round(bl, 4), baseline_val_dice_tight=round(bt, 4))
     json.dump(log, open(args.log, "w"), indent=1)
-    print(f"\nbest val dice {best:.4f} at epoch {best_ep}  (baseline {base:.4f})  -> {args.out}")
+    print(f"\nbest epoch {best_ep}: val dice loose {best_loose:.4f} tight {best_tight:.4f}  "
+          f"(baseline {bl:.4f} / {bt:.4f})  -> {args.out}")
     return 0
 
 
