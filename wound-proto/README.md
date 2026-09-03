@@ -9,8 +9,10 @@ python -m wound_proto photo.jpg --box 442,338,777,583 --marker-mm 20 \
 
 <p><img src="results/demo/overlay.png" width="420" alt="fixture at 30 degree tilt: marker corners in magenta, prompt box in yellow, MobileSAM contour in blue"></p>
 
-This is the Phase 0 from the build plan: prove the pipeline, get two honest numbers,
-decide whether to commit to Phase 1. It is **not** a medical device and must not be
+This is Phase 0 from the build plan (prove the pipeline, get two honest numbers) plus the
+Phase 1 segmenter fine-tune, which lifts per-wound Dice on FUSeg from 0.86 to 0.90 with 3.5 M
+trained parameters and 11 CPU-minutes of training after a one-off 28-minute embedding pass.
+It is **not** a medical device and must not be
 used to make clinical decisions.
 
 ## What it does
@@ -168,7 +170,65 @@ python -m wound_proto.evaluate fuseg --per-wound --ckpt weights/mobile_sam_fuseg
 ```
 
 <!-- FINETUNE -->
+**10 epochs, 36 min on 4 CPU cores, best epoch 3.**
+During training, per-wound validation Dice with loose boxes went 0.861 (zero-shot) → **0.902** and with tight boxes 0.892 → **0.882**.
+The table is the independent evaluation of the saved checkpoint through the full pipeline.
+
+| FUSeg validation, per wound (253 wounds) | zero-shot mean | fine-tuned mean | Δ | zero-shot median | fine-tuned median | zs p10 | ft p10 | zs min | ft min |
+|---|---|---|---|---|---|---|---|---|---|
+| Dice, raw SAM mask | 0.859 | 0.901 | +0.042 | 0.893 | 0.931 | 0.710 | 0.807 | 0.354 | 0.434 |
+| **Dice, after post-processing** | 0.860 | 0.901 | +0.041 | 0.894 | 0.931 | 0.711 | 0.802 | 0.355 | 0.404 |
+| IoU, after post-processing | 0.768 | 0.829 | +0.061 | 0.808 | 0.871 | 0.552 | 0.669 | 0.216 | 0.253 |
+| Dice, tight GT box (perfect user) | 0.891 | 0.880 | -0.011 | 0.920 | 0.907 | 0.779 | 0.753 | 0.419 | 0.400 |
+
+Wounds at Dice ≥ 0.80: 75% → **90%**; below 0.50: 0.8% → 0.4%.
+Overlays in `results/fuseg-perwound-ft/overlays/`; worst `0974.png`, median `0405.png`, best `0796.png`.
 <!-- /FINETUNE -->
+
+**Reading it.** The gain is where a product needs it. Paired per wound, 62 % of the 253
+wounds improved by more than 0.01 Dice and 8 % got worse; wounds under 2,000 px, the ones
+Phase 0 flagged as the weak spot, went from 0.828 to 0.874, larger ones from 0.912 to 0.945.
+The p10 moved more than the mean (0.711 → 0.802), which is what you want from a
+segmenter: fewer bad days, not a better best day. The synthetic fixtures are a regression
+check, not a target, and did not regress: end-to-end area error 1.89 % / 7.06 % (mean / p95)
+zero-shot versus 1.86 % / 5.46 % fine-tuned.
+
+**The trade-off, and why the first run was thrown away.** The v1 fine-tune (kept in
+`results/*-v1/`) reached 0.906 on loose boxes but dropped the tight-box "perfect user" score
+from 0.891 to 0.842, with one total miss, because training boxes were never tighter than 6 %
+per side and the decoder learned to expect a margin. v2 trains on boxes from exactly tight to
+20 % loose and selects the epoch on the mean of both validation scores. The tight-box score is
+still 0.011 below zero-shot, almost all of it on small wounds (0.863 → 0.846; large wounds
+0.937 → 0.935). The remaining worst case (`0974.png`, a 74-pixel wound, Dice 0.40 against
+0.89 zero-shot) is the same lesson: at that size a few boundary pixels are most of the area,
+and the fine-tuned decoder is not yet better than SAM's edge prior. The next experiment is
+not more epochs, the curve was flat after epoch 3, it is the share of tight boxes in
+training, or routing very small wounds to the zero-shot decoder.
+
+**What it cost.** 3.5 M trainable parameters, one 28-minute encoder pass to cache
+embeddings, then 3.5 minutes per epoch on four CPU cores; the selected checkpoint is from
+epoch 3. Weights are not committed (40 MB); the two commands above reproduce them.
+
+**Reading the numbers.** The independent evaluation confirms the training curve: with the
+loose boxes a real user draws, per-wound Dice goes from 0.860 to 0.901, the median from 0.894
+to 0.931, and the tenth percentile from 0.711 to 0.802. Paired per wound, 62 % improve by more
+than 0.01 and 8 % get worse. The gain is largest where Phase 0 was weakest: wounds under 2,000
+px rise from 0.828 to 0.874, larger ones from 0.912 to 0.945. The synthetic pipeline is
+unchanged (Dice 0.988 → 0.989, end-to-end area error 1.89 % → 1.86 % mean), so the
+fine-tune did not disturb the geometry.
+
+The one cost is the tight-box row. The first run (`results/*-v1/`) trained only on boxes
+dilated by at least 6 % and dropped the "perfect user" Dice from 0.891 to 0.842; training from
+tight to 20 % loose (this run) recovers most of it, 0.880, with the remaining −0.011 carried
+entirely by small wounds (0.863 → 0.846; large wounds 0.937 → 0.935). Zero-shot SAM is already
+excellent when the box is exact, so a decoder tuned to FUSeg's annotation style trades a little
+of that for robustness to sloppy boxes. The worst v2 case (`0974.png`, a 74 px wound, Dice 0.40
+where zero-shot had 0.89) is that trade in one image. The share of tight boxes in training,
+or a rule that trusts the box more when it is small, is the first knob to turn in Phase 2.
+
+Cost of the whole thing: 3.5 M trained parameters, best epoch reached after 11 minutes on four
+CPU cores once embeddings are cached, and no new dependency. Weights are not committed; the
+run reproduces from the three commands above.
 
 ## Limitations — read before extrapolating
 
