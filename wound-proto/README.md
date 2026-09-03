@@ -144,6 +144,31 @@ perspective_correction_pct  −8.03
 sam_score                   0.987
 ```
 
+## Phase 1 — fine-tuning the segmenter
+
+The plan said "fine-tune a real segmenter (SegFormer-B2 or nnU-Net)". This environment
+cannot reach any pretrained backbone, and training one from scratch on 810 images loses
+to a distilled SAM encoder, so Phase 1 follows the MedSAM recipe instead, scaled to a CPU:
+
+| | |
+|---|---|
+| Frozen | MobileSAM image encoder (6.1 M) and prompt encoder — their outputs are precomputed once by `scripts/cache_embeddings.py` (fp16, 2 MB per image) |
+| Trained | the mask decoder's single-mask path: 3.5 M parameters (the IoU head and the three unused multi-mask hypernetworks stay as shipped) |
+| Data | FUSeg train, 810 images + horizontal flips = 1,620 embeddings; validation 200 images for model selection only |
+| Prompt | ground-truth box dilated by up to **20 %** per side at random (the evaluation uses 15 %), so the decoder learns to ignore loose margins |
+| Loss | BCE + soft Dice on the 512 × 512 logits, AdamW 1e-4 / wd 0.01, cosine schedule, grad-clip 1.0, batch 8 |
+| Output | a full MobileSAM state dict, so `Segmenter(ckpt)`, the CLI and `evaluate.py --ckpt` load it unchanged |
+
+```bash
+python scripts/cache_embeddings.py                       # ~1 s/image on 4 cores, once
+python -m wound_proto.finetune --out weights/mobile_sam_fuseg.pt
+python -m wound_proto.evaluate fuseg --per-wound --ckpt weights/mobile_sam_fuseg.pt \
+    --root "vendor/wound-segmentation/data/Foot Ulcer Segmentation Challenge" --out results/fuseg-perwound-ft
+```
+
+<!-- FINETUNE -->
+<!-- /FINETUNE -->
+
 ## Limitations — read before extrapolating
 
 - **Coplanarity.** The homography assumes the wound lies in the marker's plane. On curved
@@ -187,7 +212,10 @@ wound_proto/
   measure.py     area / perimeter / length / width, pixel and metric
   synth.py       fixture generator with exact ground truth + perspective warp
   evaluate.py    `fuseg` and `synth` sub-commands
+  finetune.py    Phase 1: train the MobileSAM mask decoder on cached FUSeg embeddings
   cli.py         analyse one photo
-scripts/setup.sh fetch MobileSAM + FUSeg (not committed)
-results/         summaries committed; overlays and fixtures are not
+scripts/setup.sh            fetch MobileSAM + FUSeg (not committed)
+scripts/cache_embeddings.py run the frozen image encoder once per FUSeg image -> cache/
+scripts/fill_readme.py      render results/*.json into this file
+results/         summaries and training log committed; overlays, fixtures, cache and weights are not
 ```

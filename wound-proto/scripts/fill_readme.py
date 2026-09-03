@@ -58,6 +58,28 @@ Overlays (green = clinician mask, blue = prediction, yellow = prompt box) in `{s
 worst `{ex['worst']}`, median `{ex['median']}`, best `{ex['best']}`."""
 
 
+def finetune_block(log: dict, zs: dict, ft: dict) -> str:
+    """Phase 1: training curve summary + zero-shot vs fine-tuned per-wound table."""
+    eps = [e for e in log["epochs"] if e["epoch"] > 0]
+    secs = sum(e.get("secs", 0) for e in eps)
+    row = lambda k, name: (f"| {name} | {zs[k]['mean']:.3f} | {ft[k]['mean']:.3f} | "  # noqa: E731
+                           f"{ft[k]['mean'] - zs[k]['mean']:+.3f} | {zs[k]['median']:.3f} | {ft[k]['median']:.3f} "
+                           f"| {zs[k]['p10']:.3f} | {ft[k]['p10']:.3f} | {zs[k]['min']:.3f} | {ft[k]['min']:.3f} |")
+    return f"""**{log['args']['epochs']} epochs, {secs/60:.0f} min on 4 CPU cores, {log['best_epoch']} = best epoch.**
+Validation Dice on fixed jittered boxes went {log['baseline_val_dice']:.3f} (zero-shot) → **{log['best_val_dice']:.3f}**
+during training; the table is the independent per-wound evaluation of the saved checkpoint.
+
+| FUSeg validation, per wound ({ft['n']} wounds) | zero-shot mean | fine-tuned mean | Δ | zero-shot median | fine-tuned median | zs p10 | ft p10 | zs min | ft min |
+|---|---|---|---|---|---|---|---|---|---|
+{row('dice_raw', 'Dice, raw SAM mask')}
+{row('dice_post', '**Dice, after post-processing**')}
+{row('iou_post', 'IoU, after post-processing')}
+{row('dice_tightbox', 'Dice, tight GT box (perfect user)')}
+
+Wounds at Dice ≥ 0.80: {zs['frac_dice_post_ge_0_80']*100:.0f}% → **{ft['frac_dice_post_ge_0_80']*100:.0f}%**; below 0.50: {zs['frac_dice_post_lt_0_50']*100:.1f}% → {ft['frac_dice_post_lt_0_50']*100:.1f}%.
+Overlays in `{ft.get('out_dir', 'results/fuseg-perwound-ft')}/overlays/`; worst `{ft['examples']['worst']}`, median `{ft['examples']['median']}`, best `{ft['examples']['best']}`."""
+
+
 def fill(text: str, marker: str, block: str) -> str:
     start, end = f"<!-- {marker} -->", f"<!-- /{marker} -->"
     rendered = f"{start}\n{block}\n{end}"
@@ -80,6 +102,12 @@ def main():
     if perwound.exists():
         text = fill(text, "FUSEG_PERWOUND", fuseg_block(json.load(open(perwound))))
         print("filled FUSEG_PERWOUND")
+    log = ROOT / "results/finetune/log.json"
+    ft = ROOT / "results/fuseg-perwound-ft/fuseg_summary.json"
+    if log.exists() and ft.exists() and perwound.exists():
+        text = fill(text, "FINETUNE", finetune_block(json.load(open(log)), json.load(open(perwound)),
+                                                     json.load(open(ft))))
+        print("filled FINETUNE")
     README.write_text(text)
 
 

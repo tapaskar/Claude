@@ -4,3 +4,4 @@ results/*/overlays/
 results/*/fixtures/
 __pycache__/
 *.egg-info/
+cache/
