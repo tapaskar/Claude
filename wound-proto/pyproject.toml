@@ -1,0 +1,20 @@
+[project]
+name = "wound-proto"
+version = "0.1.0"
+description = "Phase 0 wound measurement prototype: ArUco calibration + MobileSAM box-prompt segmentation"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",
+  "opencv-contrib-python-headless>=4.8",
+  "torch",
+  "timm",
+  # mobile_sam is installed from the cloned repo by scripts/setup.sh:
+  #   pip install -e vendor/MobileSAM
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["wound_proto*"]

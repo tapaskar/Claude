@@ -1,0 +1,58 @@
+{
+ "calibrated": true,
+ "area_px": 36721.0,
+ "perimeter_px": 737.3523740768433,
+ "length_px": 255.76551761330143,
+ "width_px": 196.14059185197624,
+ "bbox_px": [
+  474,
+  373,
+  253,
+  192
+ ],
+ "area_mm2": 551.17,
+ "area_cm2": 5.512,
+ "perimeter_mm": 94.67,
+ "length_mm": 32.56,
+ "width_mm": 23.25,
+ "naive_area_mm2": 595.42,
+ "perspective_correction_pct": -8.03,
+ "calibration": {
+  "marker_id": 19,
+  "marker_mm": 20.0,
+  "naive_px_per_mm": 7.8532,
+  "rect_px_per_mm": 10.0,
+  "rect_size": [
+   1380,
+   1206
+  ],
+  "tilt_deg": 11.9,
+  "corners_px": [
+   [
+    172.9,
+    183.2
+   ],
+   [
+    325.4,
+    183.3
+   ],
+   [
+    322.0,
+    343.2
+   ],
+   [
+    166.2,
+    343.2
+   ]
+  ]
+ },
+ "image": "results/demo/fixture_tilt30.png",
+ "box_xyxy": [
+  442.0,
+  338.0,
+  777.0,
+  583.0
+ ],
+ "sam_score": 0.987,
+ "marker_found": true
+}

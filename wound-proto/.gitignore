@@ -1,0 +1,6 @@
+vendor/
+weights/
+results/*/overlays/
+results/*/fixtures/
+__pycache__/
+*.egg-info/
