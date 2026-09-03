@@ -155,13 +155,14 @@ to a distilled SAM encoder, so Phase 1 follows the MedSAM recipe instead, scaled
 | Frozen | MobileSAM image encoder (6.1 M) and prompt encoder — their outputs are precomputed once by `scripts/cache_embeddings.py` (fp16, 2 MB per image) |
 | Trained | the mask decoder's single-mask path: 3.5 M parameters (the IoU head and the three unused multi-mask hypernetworks stay as shipped) |
 | Data | FUSeg train, 810 images + horizontal flips = 1,620 embeddings; validation 200 images for model selection only |
-| Prompt | ground-truth box dilated by up to **20 %** per side at random (the evaluation uses 15 %), so the decoder learns to ignore loose margins |
-| Loss | BCE + soft Dice on the 512 × 512 logits, AdamW 1e-4 / wd 0.01, cosine schedule, grad-clip 1.0, batch 8 |
+| Prompt | ground-truth box dilated per side by a random amount **from tight to 20 %** (the evaluation draws 4.5–15 %), so the decoder sees both a careful user and a sloppy one |
+| Selection | best epoch by the mean of two validation scores: loose boxes (the evaluation protocol) and exact boxes (the "perfect user"), so neither can regress unnoticed |
+| Loss | BCE + soft Dice on the 512 × 512 logits, AdamW 1e-4 / wd 0.01, cosine schedule over 10 epochs, grad-clip 1.0, batch 8; one wound (connected component) per sample |
 | Output | a full MobileSAM state dict, so `Segmenter(ckpt)`, the CLI and `evaluate.py --ckpt` load it unchanged |
 
 ```bash
 python scripts/cache_embeddings.py                       # ~1 s/image on 4 cores, once
-python -m wound_proto.finetune --out weights/mobile_sam_fuseg.pt
+python -m wound_proto.finetune --epochs 10 --out weights/mobile_sam_fuseg.pt   # ~40 min on 4 cores
 python -m wound_proto.evaluate fuseg --per-wound --ckpt weights/mobile_sam_fuseg.pt \
     --root "vendor/wound-segmentation/data/Foot Ulcer Segmentation Challenge" --out results/fuseg-perwound-ft
 ```
