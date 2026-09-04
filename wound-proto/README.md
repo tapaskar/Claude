@@ -302,3 +302,8 @@ scripts/cache_embeddings.py run the frozen image encoder once per FUSeg image ->
 scripts/fill_readme.py      render results/*.json into this file
 results/         summaries and training log committed; overlays, fixtures, cache and weights are not
 ```
+
+## Licence
+
+MIT, see `LICENSE`. MobileSAM, fetched by `scripts/setup.sh`, is Apache-2.0. The FUSeg
+dataset is used for evaluation only, under its own terms, and is not redistributed here.

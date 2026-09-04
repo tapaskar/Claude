@@ -3,6 +3,8 @@ name = "wound-proto"
 version = "0.1.0"
 description = "Phase 0 wound measurement prototype: ArUco calibration + MobileSAM box-prompt segmentation"
 requires-python = ">=3.10"
+license = {text = "MIT"}
+classifiers = ["License :: OSI Approved :: MIT License"]
 dependencies = [
   "numpy",
   "opencv-contrib-python-headless>=4.8",
